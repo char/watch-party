@@ -17,9 +17,15 @@ export function createPlayer(connection: SessionConnection) {
   let videoElement: HTMLVideoElement | undefined = undefined;
   session.currentVideo.subscribeImmediate(videoItem => {
     if (videoElement !== undefined) videoElement.remove();
+
     const video = (
       <video crossOrigin="anonymous" controls>
         <source src={videoItem.video} />
+        {...videoItem.subtitles
+          .map(s => (<track kind="captions" label={s.name} src={s.url} />) as HTMLTrackElement)
+          .tap(list => {
+            if (list[0]) list[0].default = true;
+          })}
       </video>
     ) as HTMLVideoElement;
     videoElement = video;

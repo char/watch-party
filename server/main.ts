@@ -65,6 +65,7 @@ router.put(
     (_ctx, { body }) => {
       const session = new WatchSession(randomBase32(16));
       if (body.playlist) session.playlist = body.playlist;
+      if (session.playlist.length) session.playlistIndex = 0;
       return session.info();
     },
   ),
