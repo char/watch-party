@@ -1,0 +1,142 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light;
+
+  --color-bg: 255 255 255;
+  --color-bg-x: 243 243 243;
+  --color-fg: 0 0 0;
+  --color-accent: 252 91 205;
+  --color-off-accent: var(--color-bg);
+  --color-accent-x: 242 59 199;
+
+  --color-text: var(--color-fg);
+  --alpha-text: 0.8;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Roboto, Cantarell, sans-serif;
+  --font-mono: monospace;
+
+  --border-radius: 0.25em;
+
+  background-color: rgb(var(--color-bg) / 1);
+  color: rgb(var(--color-fg) / 1);
+
+  tab-size: 4;
+  overflow-wrap: break-word;
+  cursor: default;
+}
+
+:root,
+input,
+textarea {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: rgb(var(--color-text) / var(--alpha-text));
+
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+button,
+input[type="button"],
+input[type="submit"] {
+  appearance: none;
+
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 400;
+
+  padding: 0.5em 1em;
+
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+
+  background-color: rgb(var(--color-accent) / 1);
+  color: rgb(var(--color-off-accent) / 1);
+
+  transition: all 0.15s ease-in-out;
+  transition-property: background-color;
+
+  &:hover {
+    background-color: rgb(var(--color-accent-x) / 1);
+  }
+}
+
+input:not([type="button"], [type="submit"], [type="color"]),
+textarea {
+  background-color: rgb(var(--color-bg) / 1);
+  color: rgb(var(--color-fg) / 1);
+
+  padding: 0.5em 1em;
+
+  border: 1px solid rgb(var(--color-fg) / 0.25);
+  border-radius: var(--border-radius);
+
+  outline: none;
+
+  transition: all 0.15s ease-in-out;
+  transition-property: border-color, box-shadow;
+
+  &:focus {
+    border-color: rgb(var(--color-accent) / 1);
+    box-shadow: 0 0 0 0.2rem rgb(var(--color-accent) / 0.25);
+  }
+}
+
+a {
+  color: rgb(var(--color-accent) / 1);
+  border-bottom: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+  transition-property: border-color;
+  text-decoration: none;
+
+  &:hover {
+    border-color: rgb(var(--color-accent) / 1);
+  }
+}
+
+p,
+:is(h1, h2, h3, h4, h5, h6),
+:is(article, aside, details, footer, header, section, summary) {
+  margin: 0;
+  margin-bottom: 1em;
+}
+
+:is(article, aside, details, footer, header, section, summary) {
+  width: 100%;
+}
+
+nav,
+main,
+footer {
+  width: 100%;
+  max-width: 80ch;
+  margin: 0 auto;
+}
+
+footer p {
+  margin-bottom: 0;
+}
+
+pre {
+  padding: 1em;
+  background-color: rgb(var(--color-bg-x) / 1);
+  color: rgb(var(--color-text) / var(--alpha-text));
+  border-radius: var(--border-radius);
+  border: 1px solid rgb(var(--color-fg) / 0.25);
+}
+
+pre,
+code {
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+}
