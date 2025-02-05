@@ -75,6 +75,15 @@ export function handleConnection(
         break;
       }
 
+      case "RequestPlayheadSync": {
+        send({
+          type: "ChangePlayhead",
+          playhead: session.playhead(Temporal.Now.instant()),
+          paused: session.paused,
+        });
+        break;
+      }
+
       case "ChatMessage": {
         session.broadcast({ ...packet, type: "ChatMessage", from: connection.id });
         break;

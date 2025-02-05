@@ -73,11 +73,16 @@ const ServerChangePlayheadSchema = ChangePlayheadSchema.extend({
   from: ConnectionIdSchema.optional(),
 });
 
+const RequestPlayheadSyncSchema = v.object({
+  type: v.literal("RequestPlayheadSync"),
+});
+
 export const ClientPacketSchema = v.union(
   LeaveSessionSchema,
   ChatMessageSchema,
   RequestPeerListSchema,
   ChangePlayheadSchema,
+  RequestPlayheadSyncSchema,
 );
 
 export const ServerPacketSchema = v.union(

@@ -31,6 +31,20 @@ function renderChatMessage(
 }
 
 export function createChat(connection: SessionConnection): Element {
+  const executeCommand = (command: string) => {
+    const args = command.substring(1).split(/\s+/);
+    switch (args[0].toLowerCase()) {
+      case "sync": {
+        connection.send({ type: "RequestPlayheadSync" });
+        break;
+      }
+      case "help": {
+        // TODO
+        break;
+      }
+    }
+  };
+
   const lookupPeer = (id: string) =>
     connection.session.peers.find(it => it.connectionId === id);
 
@@ -70,7 +84,14 @@ export function createChat(connection: SessionConnection): Element {
       }:${seconds < 10 ? "0" + seconds : seconds}`;
     };
 
-    if (event.originator === "server") return;
+    if (event.originator === "server") {
+      appendChatMessage(
+        <article className="system">
+          you have been synced to {formatTime(event.playhead)}.
+        </article>,
+      );
+      return;
+    }
     const from = event.originator === "local" ? connection.user : lookupPeer(event.originator);
     if (!from) return;
 
@@ -89,7 +110,12 @@ export function createChat(connection: SessionConnection): Element {
         e.preventDefault();
         const message = messageToSend.get();
         if (!message.trim()) return;
-        connection.send({ type: "ChatMessage", text: message, facets: [] });
+
+        if (message.startsWith("/")) {
+          executeCommand(message);
+        } else {
+          connection.send({ type: "ChatMessage", text: message, facets: [] });
+        }
         messageToSend.set("");
       })}
     >
