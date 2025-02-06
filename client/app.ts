@@ -43,28 +43,16 @@ export const app = {
     }
   },
 
-  sessionId: new Signal<string>(
-    window.location.hash
-      .substring(1)
-      .pipe(s => new URLSearchParams(s))
-      .get("id") ?? "",
-  ).tap(s => {
+  sessionId: new Signal<string>(window.location.hash.substring(1)).tap(s => {
     let skip = false;
-
     s.subscribe(id => {
-      const params = window.location.hash.substring(1).pipe(s => new URLSearchParams(s));
-      if (id) params.set("id", id);
-      else params.delete("id");
-
       skip = true;
-      window.location.replace("#" + params.toString());
+      window.location.replace("#" + id.toString());
       skip = false;
     });
-
     window.addEventListener("hashchange", () => {
       if (skip) return;
-      const params = window.location.hash.substring(1).pipe(s => new URLSearchParams(s));
-      s.set(params.get("id") ?? "");
+      s.set(window.location.hash.substring(1));
     });
   }),
 };

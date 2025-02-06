@@ -4,7 +4,7 @@ import { ServerPacket } from "../common/proto.ts";
 import { Peer } from "./connection.ts";
 import { BasicSignalHandler } from "./signals.ts";
 
-export type Originator = "local" | "server" | (string & Record<never, never>);
+export type Originator = "local" | "server" | Peer | undefined;
 
 export class PlaylistChange {
   constructor(
@@ -40,8 +40,16 @@ export class PeerLeft {
   ) {}
 }
 
+export class IncomingChatMessage {
+  constructor(
+    public peer: Peer,
+    public text: string,
+    public facets: ServerPacket<"ChatMessage">["facets"],
+  ) {}
+}
+
 export class WatchSession extends BasicSignalHandler {
-  peers: Peer[] = [];
+  peers = new Map<string, Peer>();
 
   playedAt: number | undefined;
   lastPlayhead: number = 0;
@@ -66,10 +74,10 @@ export class WatchSession extends BasicSignalHandler {
     super();
 
     this.on(PeerJoined, ({ peer }) => {
-      this.peers.push(peer);
+      this.peers.set(peer.connectionId, peer);
     });
     this.on(PeerLeft, ({ peer }) => {
-      this.peers = this.peers.filter(it => it.connectionId !== peer.connectionId);
+      this.peers.delete(peer.connectionId);
     });
 
     this.on(PlaylistChange, ({ playlist, playlistIndex }) => {

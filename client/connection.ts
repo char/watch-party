@@ -2,6 +2,7 @@ import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { ClientPacket, ServerPacket, ServerPacketSchema } from "../common/proto.ts";
 import { UserInfo } from "./app.ts";
 import {
+  IncomingChatMessage,
   PeerJoined,
   PeerLeft,
   PlayheadOverride,
@@ -63,6 +64,7 @@ export class SessionConnection extends BasicSignalHandler {
 
     this.#handlePeerListChanges();
     this.#handlePlayheadChanges();
+    this.#handleChat();
   }
   send(packet: ClientPacket) {
     this.socket.send(encodeCbor(packet));
@@ -76,7 +78,8 @@ export class SessionConnection extends BasicSignalHandler {
     this.on(ReceivedPacket, ({ packet }) => {
       switch (packet.type) {
         case "FullPeerList": {
-          this.session.peers = packet.peers;
+          this.session.peers.clear();
+          for (const peer of packet.peers) this.session.peers.set(peer.connectionId, peer);
           break;
         }
         case "PeerAdded": {
@@ -88,11 +91,8 @@ export class SessionConnection extends BasicSignalHandler {
           break;
         }
         case "PeerDropped": {
-          const peerIdx = this.session.peers.findIndex(
-            it => it.connectionId === packet.connectionId,
-          );
-          if (peerIdx === -1) return;
-          const peer = this.session.peers.splice(peerIdx, 1).at(0)!;
+          const peer = this.session.peers.get(packet.connectionId);
+          if (!peer) return;
           this.session.fire(PeerLeft, peer, packet.reason);
           break;
         }
@@ -107,7 +107,7 @@ export class SessionConnection extends BasicSignalHandler {
       if (packet.from === this.user.connectionId) return;
       this.session.fire(
         PlayheadOverride,
-        packet.from ?? "server",
+        packet.from ? this.session.peers.get(packet.from) : "server",
         Date.now(),
         packet.playhead,
         packet.paused,
@@ -117,6 +117,15 @@ export class SessionConnection extends BasicSignalHandler {
     this.session.on(PlayheadOverride, event => {
       if (event.originator !== "local") return;
       this.send({ type: "ChangePlayhead", playhead: event.playhead, paused: event.paused });
+    });
+  }
+
+  #handleChat() {
+    this.on(ReceivedPacket, ({ packet }) => {
+      if (packet.type !== "ChatMessage") return;
+      const peer = this.session.peers.get(packet.from);
+      if (!peer) return;
+      this.session.fire(IncomingChatMessage, peer, packet.text, packet.facets);
     });
   }
 }

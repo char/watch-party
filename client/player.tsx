@@ -1,15 +1,16 @@
-import { createChat } from "./chat.tsx";
+import { ChatWindow } from "./chat.tsx";
 import { SessionConnection } from "./connection.ts";
 import { PlayheadOverride } from "./session.ts";
 
 export function createPlayer(connection: SessionConnection) {
   const { session } = connection;
 
+  const chat = new ChatWindow(session, p => connection.send({ ...p, type: "ChatMessage" }));
   const player = (
     <div id="player">
       <div id="video-container"></div>
       <div id="chat-resizer"></div>
-      <div id="chat-container">{createChat(connection)}</div>
+      <div id="chat-container">{chat.window}</div>
     </div>
   );
   const videoContainer = player.querySelector("#video-container")!;
