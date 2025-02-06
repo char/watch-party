@@ -43,8 +43,11 @@ router.get("/api/session/:session/connect", ctx => {
     const displayColor = ctx.request.url.searchParams.get("color");
     if (!displayColor) throw new HTTPError(Status.BadRequest, "missing color");
 
+    let id = ctx.request.url.searchParams.get("id");
+    if (!id || WatchSession.SESSIONS.has(id)) id = randomBase32(8);
+
     connection = {
-      id: randomBase32(8),
+      id,
       nickname,
       displayColor,
       lastKeepalive: Date.now(),
