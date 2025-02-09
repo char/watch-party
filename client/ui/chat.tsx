@@ -1,14 +1,14 @@
 import { Signal } from "@char/aftercare";
-import { ClientPacket, ServerPacket } from "../common/proto.ts";
-import { Peer } from "./connection.ts";
+import { ClientPacket, ServerPacket } from "../../common/proto.ts";
+import { Peer } from "../state/connection.ts";
 import {
   IncomingChatMessage,
   PeerJoined,
   PeerLeft,
   PlayheadOverride,
   WatchSession,
-} from "./session.ts";
-import { bindValue, onEvent } from "./util.ts";
+} from "../state/session.ts";
+import { bindValue, onEvent } from "../util.ts";
 
 function ChatMessage(
   from: Peer,

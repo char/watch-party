@@ -43,11 +43,8 @@ router.get("/api/session/:session/connect", ctx => {
     const displayColor = ctx.request.url.searchParams.get("color");
     if (!displayColor) throw new HTTPError(Status.BadRequest, "missing color");
 
-    let id = ctx.request.url.searchParams.get("id");
-    if (!id || WatchSession.SESSIONS.has(id)) id = randomBase32(8);
-
     connection = {
-      id,
+      id: randomBase32(8),
       nickname,
       displayColor,
       lastKeepalive: Date.now(),
@@ -64,9 +61,16 @@ router.get("/api/session/:session/connect", ctx => {
 router.put(
   "/api/session",
   apiHandler(
-    { body: v.object({ playlist: v.array(PlaylistItemSchema).optional() }) },
+    {
+      body: v.object({
+        id: v.string().optional(),
+        playlist: v.array(PlaylistItemSchema).optional(),
+      }),
+    },
     (_ctx, { body }) => {
-      const session = new WatchSession(randomBase32(16));
+      let id = body.id || randomBase32(16);
+      while (WatchSession.SESSIONS.has(id)) id = randomBase32(16);
+      const session = new WatchSession(id);
       if (body.playlist) session.playlist = body.playlist;
       if (session.playlist.length) session.playlistIndex = 0;
       return session.info();

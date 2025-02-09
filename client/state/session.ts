@@ -1,8 +1,8 @@
-import { LazySignal } from "@char/aftercare";
-import { PlaylistItem } from "../common/playlist.ts";
-import { ServerPacket } from "../common/proto.ts";
+import { Signal } from "@char/aftercare";
+import { PlaylistItem } from "../../common/playlist.ts";
+import { ServerPacket } from "../../common/proto.ts";
+import { BasicSignalHandler } from "../signals.ts";
 import { Peer } from "./connection.ts";
-import { BasicSignalHandler } from "./signals.ts";
 
 export type Originator = "local" | "server" | Peer | undefined;
 
@@ -68,7 +68,7 @@ export class WatchSession extends BasicSignalHandler {
     return this.lastPlayhead;
   }
 
-  currentVideo = new LazySignal<PlaylistItem>();
+  currentVideo = new Signal<PlaylistItem | undefined>(undefined);
 
   constructor(public id: string) {
     super();

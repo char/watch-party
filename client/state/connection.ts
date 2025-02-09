@@ -1,5 +1,5 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
-import { ClientPacket, ServerPacket, ServerPacketSchema } from "../common/proto.ts";
+import { ClientPacket, ServerPacket, ServerPacketSchema } from "../../common/proto.ts";
 import { UserInfo } from "./app.ts";
 import {
   IncomingChatMessage,
@@ -9,7 +9,7 @@ import {
   PlaylistChange,
   WatchSession,
 } from "./session.ts";
-import { BasicSignalHandler } from "./signals.ts";
+import { BasicSignalHandler } from "../signals.ts";
 
 export interface Peer {
   connectionId: string;

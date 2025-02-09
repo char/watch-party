@@ -1,6 +1,6 @@
 import { Signal } from "@char/aftercare";
-import { app } from "./app.ts";
-import { bindValue, onEvent } from "./util.ts";
+import { app } from "../state/app.ts";
+import { bindValue, onEvent } from "../util.ts";
 
 export type ConnectCallback = (sessionId: string, nickname: string) => void;
 
@@ -8,7 +8,7 @@ export const createConnectForm = () => {
   const nickname = new Signal(app.user.get()?.nickname ?? "");
   const displayColor = new Signal(app.user.get()?.displayColor ?? "#ffffff");
 
-  return (
+  const connectForm = (
     <form
       _tap={onEvent("submit", ev => {
         ev.preventDefault();
@@ -45,20 +45,8 @@ export const createConnectForm = () => {
       />
 
       <button role="submit">join</button>
-
-      <p>
-        don't have a session id? you might want to{" "}
-        <a
-          _tap={onEvent("click", e => {
-            e.preventDefault();
-            // TODO: show create session form
-          })}
-          href="javascript:void(0)"
-        >
-          create a session
-        </a>
-        .
-      </p>
     </form>
   );
+
+  return connectForm;
 };

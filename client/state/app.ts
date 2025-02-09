@@ -1,5 +1,5 @@
 import { LazySignal, Signal } from "@char/aftercare";
-import { connectToSession, SessionConnection } from "./connection.ts";
+import { connectToSession, SessionConnection } from "../state/connection.ts";
 
 export interface UserInfo {
   nickname: string;

@@ -1,6 +1,6 @@
+import { SessionConnection } from "../state/connection.ts";
+import { PlayheadOverride } from "../state/session.ts";
 import { ChatWindow } from "./chat.tsx";
-import { SessionConnection } from "./connection.ts";
-import { PlayheadOverride } from "./session.ts";
 
 export function createPlayer(connection: SessionConnection) {
   const { session } = connection;
@@ -15,8 +15,19 @@ export function createPlayer(connection: SessionConnection) {
   );
   const videoContainer = player.querySelector("#video-container")!;
 
+  const noCurrentVideo = (
+    <div className="video-status">There is no video currently playing.</div>
+  );
   let videoElement: HTMLVideoElement | undefined = undefined;
   session.currentVideo.subscribeImmediate(videoItem => {
+    if (videoItem === undefined) {
+      videoContainer.append(noCurrentVideo);
+      videoElement?.remove();
+      return;
+    } else {
+      noCurrentVideo.remove();
+    }
+
     if (videoElement !== undefined) videoElement.remove();
 
     const video = (

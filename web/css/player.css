@@ -17,6 +17,12 @@
       width: 100%;
       object-fit: contain;
     }
+
+    &:has(.video-status) {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   }
 
   #chat-resizer {
