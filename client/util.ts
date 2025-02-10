@@ -2,12 +2,11 @@ import { Signal } from "@char/aftercare";
 
 export function onEvent<El extends Element, Ev extends keyof HTMLElementEventMap>(
   eventName: Ev,
-  callback: (this: Element, event: HTMLElementEventMap[Ev]) => void,
+  callback: (event: HTMLElementEventMap[Ev]) => void,
 ): (elem: El) => void {
   return (elem: El) => {
-    const cb = callback.bind(elem);
     elem.addEventListener(eventName, event => {
-      cb(event as HTMLElementEventMap[Ev]);
+      callback(event as HTMLElementEventMap[Ev]);
     });
   };
 }

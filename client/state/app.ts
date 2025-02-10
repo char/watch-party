@@ -9,6 +9,8 @@ export interface UserInfo {
 let connecting = false;
 
 export const app = {
+  locked: new Signal(false),
+
   user: new Signal<UserInfo | undefined>(undefined).tap(s => {
     const nickname = localStorage.getItem("watch-party/last-nickname") ?? undefined;
     const displayColor = localStorage.getItem("watch-party/last-display-color") ?? "#ffffff";

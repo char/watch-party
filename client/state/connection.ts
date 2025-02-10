@@ -1,6 +1,7 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { ClientPacket, ServerPacket, ServerPacketSchema } from "../../common/proto.ts";
-import { UserInfo } from "./app.ts";
+import { BasicSignalHandler } from "../signals.ts";
+import { app, UserInfo } from "./app.ts";
 import {
   IncomingChatMessage,
   PeerJoined,
@@ -9,7 +10,6 @@ import {
   PlaylistChange,
   WatchSession,
 } from "./session.ts";
-import { BasicSignalHandler } from "../signals.ts";
 
 export interface Peer {
   connectionId: string;
@@ -116,6 +116,10 @@ export class SessionConnection extends BasicSignalHandler {
 
     this.session.on(PlayheadOverride, event => {
       if (event.originator !== "local") return;
+      if (app.locked.get()) {
+        this.send({ type: "RequestPlayheadSync" });
+        return;
+      }
       this.send({ type: "ChangePlayhead", playhead: event.playhead, paused: event.paused });
     });
   }

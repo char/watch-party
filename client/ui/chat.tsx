@@ -1,5 +1,6 @@
 import { Signal } from "@char/aftercare";
 import { ClientPacket, ServerPacket } from "../../common/proto.ts";
+import { app } from "../state/app.ts";
 import { Peer } from "../state/connection.ts";
 import {
   IncomingChatMessage,
@@ -76,25 +77,42 @@ export class ChatWindow {
   }
 
   executeCommand(command: string) {
-    const args = command.substring(1).split(/\s+/);
+    const args = command.split(/\s+/);
     switch (args[0].toLowerCase()) {
       case "sync": {
-        connection.send({ type: "RequestPlayheadSync" });
+        app.connection.get()!.send({ type: "RequestPlayheadSync" });
         break;
       }
       case "list": {
-        const message = <article />;
+        const list = <ul />;
         for (const peer of this.session.peers.values()) {
-          message.append(
-            <strong
-              _tap={it => (it.style.color = peer.displayColor)}
-              dataset={{ peer: peer.connectionId }}
-            >
-              {peer.nickname}
-            </strong>,
+          list.append(
+            <li>
+              <strong
+                _tap={it => (it.style.color = peer.displayColor)}
+                dataset={{ peer: peer.connectionId }}
+              >
+                {peer.nickname}
+              </strong>
+            </li>,
           );
         }
-        this.append(message);
+        this.append(
+          <article>
+            <p>connected users:</p>
+            {list}
+          </article>,
+        );
+        break;
+      }
+      case "lock": {
+        app.locked.set(!app.locked.get());
+        this.append(
+          <article className="system">
+            playback controls are{" "}
+            {app.locked.get() ? <strong>now</strong> : <strong>no longer</strong>} locked.
+          </article>,
+        );
         break;
       }
       case "help": {
@@ -111,7 +129,6 @@ export class ChatWindow {
             </ul>
           </article>,
         );
-        // TODO
         break;
       }
     }
@@ -142,7 +159,9 @@ export class ChatWindow {
         );
         return;
       }
-      const from = event.originator === "local" ? connection.user : event.originator;
+      if (event.originator === "local" && app.locked.get()) return;
+
+      const from = event.originator === "local" ? app.connection.get()!.user : event.originator;
       if (!from) return;
 
       const playState = event.paused ? "paused" : "started playing";
