@@ -114,5 +114,6 @@ const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-console.log("Listening on: http://127.0.0.1:8524/ ...");
-app.listen({ port: 8524 });
+const bindHost = Deno.env.get("BIND_HOST");
+console.log(`Listening on: http://${bindHost ?? "127.0.0.1"}:8524/ ...`);
+app.listen({ hostname: bindHost ?? "0.0.0.0", port: 8524 });
