@@ -86,6 +86,21 @@ export class ChatWindow {
         // TODO
         break;
       }
+      case "list": {
+        const message = <article />;
+        for (const peer of this.session.peers.values()) {
+          message.append(
+            <strong
+              _tap={it => (it.style.color = peer.displayColor)}
+              dataset={{ peer: peer.connectionId }}
+            >
+              {peer.nickname}
+            </strong>,
+          );
+        }
+        this.append(message);
+        break;
+      }
     }
   }
 
