@@ -14,6 +14,7 @@
 
     article {
       margin: 0;
+      white-space: pre-wrap;
     }
 
     .system {
