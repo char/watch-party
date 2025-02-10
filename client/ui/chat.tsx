@@ -82,10 +82,6 @@ export class ChatWindow {
         connection.send({ type: "RequestPlayheadSync" });
         break;
       }
-      case "help": {
-        // TODO
-        break;
-      }
       case "list": {
         const message = <article />;
         for (const peer of this.session.peers.values()) {
@@ -99,6 +95,23 @@ export class ChatWindow {
           );
         }
         this.append(message);
+        break;
+      }
+      case "help": {
+        this.append(
+          <article>
+            <p>commands:</p>
+            <ul>
+              <li>
+                <kbd>/sync</kbd> - resyncs video state with the server's view
+              </li>
+              <li>
+                <kbd>/list</kbd> - lists all peers in the room
+              </li>
+            </ul>
+          </article>,
+        );
+        // TODO
         break;
       }
     }
