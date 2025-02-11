@@ -170,7 +170,7 @@ export class ChatWindow {
 
         if (
           this.#lastMessage?.classList.contains("playhead") &&
-          (this.#lastMessage as HTMLElement).dataset.fromServer
+          (this.#lastMessage as HTMLElement).dataset.fromServer !== undefined
         ) {
           this.#lastMessage.insertAdjacentElement("beforebegin", msg);
           this.#lastMessage.remove();
