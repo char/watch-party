@@ -1,11 +1,9 @@
 import { SessionConnection } from "../state/connection.ts";
-import { PlayheadOverride } from "../state/session.ts";
+import { PlayheadOverride } from "../state/video-state.ts";
 import { ChatWindow } from "./chat.tsx";
 
-export function createPlayer(connection: SessionConnection) {
-  const { session } = connection;
-
-  const chat = new ChatWindow(session, p => connection.send({ ...p, type: "ChatMessage" }));
+export function createPlayer(session: SessionConnection) {
+  const chat = new ChatWindow(session);
   const player = (
     <div id="player">
       <div id="video-container"></div>
@@ -19,7 +17,7 @@ export function createPlayer(connection: SessionConnection) {
     <div className="video-status">There is no video currently playing.</div>
   );
   let videoElement: HTMLVideoElement | undefined = undefined;
-  session.currentVideo.subscribeImmediate(videoItem => {
+  session.video.currentVideo.subscribeImmediate(videoItem => {
     if (videoItem === undefined) {
       videoContainer.append(noCurrentVideo);
       videoElement?.remove();
@@ -42,12 +40,12 @@ export function createPlayer(connection: SessionConnection) {
     ) as HTMLVideoElement;
     videoElement = video;
 
-    video.currentTime = session.playhead / 1000;
-    if (!session.paused) void video.play();
+    video.currentTime = session.video.playhead / 1000;
+    if (!session.video.paused) void video.play();
 
-    session.on(PlayheadOverride, event => {
+    session.video.on(PlayheadOverride, event => {
       if (event.originator === "local") return;
-      video!.currentTime = session.playhead / 1000;
+      video!.currentTime = session.video.playhead / 1000;
       if (event.paused) video.pause();
       else video.play();
     });
@@ -57,17 +55,24 @@ export function createPlayer(connection: SessionConnection) {
       const DEBOUNCE_TIME = 1000 / 15;
       if (overrideDebounce) clearTimeout(overrideDebounce);
       overrideDebounce = setTimeout(() => {
-        session.fire(PlayheadOverride, "local", Date.now(), playhead + DEBOUNCE_TIME, paused);
+        session.video.fire(
+          PlayheadOverride,
+          "local",
+          Date.now(),
+          playhead + DEBOUNCE_TIME,
+          paused,
+        );
         overrideDebounce = undefined;
       }, DEBOUNCE_TIME);
     };
 
     const changePlayhead = () => {
       const playhead = video.currentTime * 1000;
-      if (Math.abs(playhead - session.playhead) > 500) emitPlayhead(playhead, session.paused);
+      if (Math.abs(playhead - session.video.playhead) > 500)
+        emitPlayhead(playhead, session.video.paused);
     };
     const changePaused = (paused: boolean) => () => {
-      if (paused !== session.paused) emitPlayhead(video.currentTime * 1000, paused);
+      if (paused !== session.video.paused) emitPlayhead(video.currentTime * 1000, paused);
     };
 
     video.addEventListener("seeking", changePlayhead);

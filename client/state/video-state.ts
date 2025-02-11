@@ -1,6 +1,5 @@
 import { Signal } from "@char/aftercare";
 import { PlaylistItem } from "../../common/playlist.ts";
-import { ServerPacket } from "../../common/proto.ts";
 import { BasicSignalHandler } from "../signals.ts";
 import { Peer } from "./connection.ts";
 
@@ -30,27 +29,7 @@ export class PlayheadOverride {
   ) {}
 }
 
-export class PeerJoined {
-  constructor(public peer: Peer) {}
-}
-export class PeerLeft {
-  constructor(
-    public peer: Peer,
-    public reason: ServerPacket<"PeerDropped">["reason"],
-  ) {}
-}
-
-export class IncomingChatMessage {
-  constructor(
-    public peer: Peer,
-    public text: string,
-    public facets: ServerPacket<"ChatMessage">["facets"],
-  ) {}
-}
-
-export class WatchSession extends BasicSignalHandler {
-  peers = new Map<string, Peer>();
-
+export class VideoState extends BasicSignalHandler {
   playedAt: number | undefined;
   lastPlayhead: number = 0;
 
@@ -73,20 +52,10 @@ export class WatchSession extends BasicSignalHandler {
   constructor(public id: string) {
     super();
 
-    this.on(PeerJoined, ({ peer }) => {
-      this.peers.set(peer.connectionId, peer);
-    });
-    this.on(PeerLeft, ({ peer }) => {
-      this.peers.delete(peer.connectionId);
-    });
-
     this.on(PlaylistChange, ({ playlist, playlistIndex }) => {
       this.playlist = playlist;
       this.playlistIndex = playlistIndex;
-
-      const currentVideo = this.playlist.at(this.playlistIndex);
-      if (currentVideo && currentVideo !== this.currentVideo.get())
-        this.currentVideo.set(currentVideo);
+      this.updateCurrentVideo();
     });
     this.on(
       PlayheadOverride,
@@ -102,10 +71,13 @@ export class WatchSession extends BasicSignalHandler {
       this.playedAt = undefined;
       this.lastPlayhead = 0;
       this.playlistIndex = playlistIndex;
-
-      const currentVideo = this.playlist.at(this.playlistIndex);
-      if (currentVideo && currentVideo !== this.currentVideo.get())
-        this.currentVideo.set(currentVideo);
+      this.updateCurrentVideo();
     });
+  }
+
+  updateCurrentVideo() {
+    const currentVideo = this.playlist.at(this.playlistIndex);
+    if (currentVideo && currentVideo !== this.currentVideo.get())
+      this.currentVideo.set(currentVideo);
   }
 }

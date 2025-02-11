@@ -2,14 +2,7 @@ import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { ClientPacket, ServerPacket, ServerPacketSchema } from "../../common/proto.ts";
 import { BasicSignalHandler } from "../signals.ts";
 import { app, UserInfo } from "./app.ts";
-import {
-  IncomingChatMessage,
-  PeerJoined,
-  PeerLeft,
-  PlayheadOverride,
-  PlaylistChange,
-  WatchSession,
-} from "./session.ts";
+import { PlayheadOverride, PlaylistChange, VideoState } from "./video-state.ts";
 
 export interface Peer {
   connectionId: string;
@@ -21,6 +14,16 @@ export class ReceivedPacket {
   constructor(public packet: ServerPacket) {}
 }
 
+export class PeerJoined {
+  constructor(public peer: Peer) {}
+}
+export class PeerLeft {
+  constructor(
+    public peer: Peer,
+    public reason: ServerPacket<"PeerDropped">["reason"],
+  ) {}
+}
+
 export class SessionConnection extends BasicSignalHandler {
   #abort = new AbortController();
   get abort() {
@@ -28,7 +31,8 @@ export class SessionConnection extends BasicSignalHandler {
   }
 
   user: Peer;
-  session: WatchSession;
+  peers = new Map<string, Peer>();
+  video: VideoState;
 
   constructor(
     public socket: WebSocket,
@@ -41,20 +45,22 @@ export class SessionConnection extends BasicSignalHandler {
       nickname: handshakePacket.nickname,
       displayColor: handshakePacket.displayColor,
     };
-    this.session = new WatchSession(handshakePacket.session);
+    this.peers.set(this.user.connectionId, this.user);
+    this.video = new VideoState(handshakePacket.session);
 
     this.#abort.signal.addEventListener("abort", () => {
       this.send({ type: "LeaveSession" });
       this.socket.close();
     });
-    this.session.playlist = handshakePacket.playlist;
-    this.session.fire(
+    this.video.playlist = handshakePacket.playlist;
+    this.video.playlistIndex = handshakePacket.playlistIndex;
+    this.video.fire(
       PlaylistChange,
       "server",
       handshakePacket.playlist,
       handshakePacket.playlistIndex,
     );
-    this.session.fire(
+    this.video.fire(
       PlayheadOverride,
       "server",
       Date.now(),
@@ -64,7 +70,6 @@ export class SessionConnection extends BasicSignalHandler {
 
     this.#handlePeerListChanges();
     this.#handlePlayheadChanges();
-    this.#handleChat();
   }
   send(packet: ClientPacket) {
     this.socket.send(encodeCbor(packet));
@@ -78,22 +83,25 @@ export class SessionConnection extends BasicSignalHandler {
     this.on(ReceivedPacket, ({ packet }) => {
       switch (packet.type) {
         case "FullPeerList": {
-          this.session.peers.clear();
-          for (const peer of packet.peers) this.session.peers.set(peer.connectionId, peer);
+          this.peers.clear();
+          for (const peer of packet.peers) this.peers.set(peer.connectionId, peer);
           break;
         }
         case "PeerAdded": {
-          this.session.fire(PeerJoined, {
+          const peer = {
             connectionId: packet.connectionId,
             nickname: packet.nickname,
             displayColor: packet.displayColor,
-          });
+          };
+          this.peers.set(peer.connectionId, peer);
+          this.fire(PeerJoined, peer);
           break;
         }
         case "PeerDropped": {
-          const peer = this.session.peers.get(packet.connectionId);
+          const peer = this.peers.get(packet.connectionId);
           if (!peer) return;
-          this.session.fire(PeerLeft, peer, packet.reason);
+          this.peers.delete(peer.connectionId);
+          this.fire(PeerLeft, peer, packet.reason);
           break;
         }
       }
@@ -105,31 +113,22 @@ export class SessionConnection extends BasicSignalHandler {
     this.on(ReceivedPacket, ({ packet }) => {
       if (packet.type !== "ChangePlayhead") return;
       if (packet.from === this.user.connectionId) return;
-      this.session.fire(
+      this.video.fire(
         PlayheadOverride,
-        packet.from ? this.session.peers.get(packet.from) : "server",
+        packet.from ? this.peers.get(packet.from) : "server",
         Date.now(),
         packet.playhead,
         packet.paused,
       );
     });
 
-    this.session.on(PlayheadOverride, event => {
+    this.video.on(PlayheadOverride, event => {
       if (event.originator !== "local") return;
       if (app.locked.get()) {
         this.send({ type: "RequestPlayheadSync" });
         return;
       }
       this.send({ type: "ChangePlayhead", playhead: event.playhead, paused: event.paused });
-    });
-  }
-
-  #handleChat() {
-    this.on(ReceivedPacket, ({ packet }) => {
-      if (packet.type !== "ChatMessage") return;
-      const peer = this.session.peers.get(packet.from);
-      if (!peer) return;
-      this.session.fire(IncomingChatMessage, peer, packet.text, packet.facets);
     });
   }
 }

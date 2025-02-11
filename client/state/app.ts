@@ -61,4 +61,4 @@ export const app = {
 
 Object.defineProperty(globalThis, "app", { value: app });
 Object.defineProperty(globalThis, "connection", { get: () => app.connection.get() });
-Object.defineProperty(globalThis, "session", { get: () => app.connection.get()?.session });
+Object.defineProperty(globalThis, "session", { get: () => app.connection.get()?.video });

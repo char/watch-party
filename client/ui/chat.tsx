@@ -1,14 +1,14 @@
 import { Signal } from "@char/aftercare";
-import { ClientPacket, ServerPacket } from "../../common/proto.ts";
+import { ServerPacket } from "../../common/proto.ts";
 import { app } from "../state/app.ts";
-import { Peer } from "../state/connection.ts";
 import {
-  IncomingChatMessage,
+  Peer,
   PeerJoined,
   PeerLeft,
-  PlayheadOverride,
-  WatchSession,
-} from "../state/session.ts";
+  ReceivedPacket,
+  SessionConnection,
+} from "../state/connection.ts";
+import { PlayheadOverride } from "../state/video-state.ts";
 import { bindValue, onEvent } from "../util.ts";
 
 function ChatMessage(
@@ -50,10 +50,9 @@ export class ChatWindow {
   messages: Element;
   window: Element;
 
-  constructor(
-    public session: WatchSession,
-    private sendChatMessage: (packet: Omit<ClientPacket<"ChatMessage">, "type">) => void,
-  ) {
+  #lastMessage: Element | undefined;
+
+  constructor(public session: SessionConnection) {
     this.messages = <div id="chat-messages"></div>;
 
     this.window = (
@@ -74,6 +73,7 @@ export class ChatWindow {
     this.messages.append(message);
     if (scrolledToBottom)
       this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
+    this.#lastMessage = message;
   }
 
   executeCommand(command: string) {
@@ -135,25 +135,32 @@ export class ChatWindow {
   }
 
   #handleChat() {
-    this.session.on(IncomingChatMessage, ({ peer, text, facets }) =>
-      this.append(ChatMessage(peer, text, facets)),
-    );
+    this.session.on(ReceivedPacket, ({ packet }) => {
+      if (packet.type !== "ChatMessage") return;
+      const peer = this.session.peers.get(packet.from);
+      if (!peer) return;
+      this.append(ChatMessage(peer, packet.text, packet.facets));
+    });
   }
 
   #handleJoinLeave() {
-    this.session.on(PeerJoined, ({ peer }) => {
-      this.append(ChatMessage(peer, "joined", [], true));
-    });
-    this.session.on(PeerLeft, ({ peer }) => {
-      this.append(ChatMessage(peer, "left", [], true));
-    });
+    this.session.on(PeerJoined, ({ peer }) =>
+      ChatMessage(peer, "joined", [], true)
+        .tap(it => it.classList.add("peer", "join"))
+        .pipe(e => this.append(e)),
+    );
+    this.session.on(PeerLeft, ({ peer }) =>
+      ChatMessage(peer, "left", [], true)
+        .tap(it => it.classList.add("peer", "leave"))
+        .pipe(e => this.append(e)),
+    );
   }
 
   #handlePlayheadOverride() {
-    this.session.on(PlayheadOverride, event => {
+    this.session.video.on(PlayheadOverride, event => {
       if (event.originator === "server") {
         this.append(
-          <article className="system">
+          <article className="system playhead">
             you have been synced to {formatTime(event.playhead)}.
           </article>,
         );
@@ -166,7 +173,25 @@ export class ChatWindow {
 
       const playState = event.paused ? "paused" : "started playing";
 
-      this.append(ChatMessage(from, `${playState} at ${formatTime(event.playhead)}`, [], true));
+      const msg = ChatMessage(
+        from,
+        `${playState} at ${formatTime(event.playhead)}`,
+        [],
+        true,
+      ).tap(it => it.classList.add("playhead"));
+
+      if (
+        this.#lastMessage !== undefined &&
+        this.#lastMessage.classList.contains("system") &&
+        this.#lastMessage.classList.contains("playhead") &&
+        this.#lastMessage.querySelector(`strong[data-peer="${from.connectionId}"]`)
+      ) {
+        this.#lastMessage.insertAdjacentElement("beforebegin", msg);
+        this.#lastMessage.remove();
+        this.#lastMessage = msg;
+      } else {
+        this.append(msg);
+      }
     });
   }
 
@@ -185,7 +210,7 @@ export class ChatWindow {
           if (message.startsWith("/")) {
             this.executeCommand(message.substring(1));
           } else {
-            this.sendChatMessage({ text: message, facets: [] });
+            this.session.send({ type: "ChatMessage", text: message, facets: [] });
           }
           messageToSend.set("");
         })}

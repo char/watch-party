@@ -92,7 +92,9 @@ router.get("/:path*", async ctx => {
   }
 });
 
-router.use(async (ctx, next) => {
+const app = new Application();
+
+app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
@@ -104,7 +106,6 @@ router.use(async (ctx, next) => {
   }
 });
 
-const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
