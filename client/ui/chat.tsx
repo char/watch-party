@@ -80,7 +80,7 @@ export class ChatWindow {
     const args = command.split(/\s+/);
     switch (args[0].toLowerCase()) {
       case "sync": {
-        app.connection.get()!.send({ type: "RequestPlayheadSync" });
+        app.session.get()!.send({ type: "RequestPlayheadSync" });
         break;
       }
       case "list": {
@@ -168,7 +168,7 @@ export class ChatWindow {
       }
       if (event.originator === "local" && app.locked.get()) return;
 
-      const from = event.originator === "local" ? app.connection.get()!.user : event.originator;
+      const from = event.originator === "local" ? app.session.get()!.user : event.originator;
       if (!from) return;
 
       const playState = event.paused ? "paused" : "started playing";

@@ -139,7 +139,7 @@ async function connectViaSocket(socket: WebSocket): Promise<SessionConnection> {
   socket.addEventListener("open", () => connected.resolve());
   socket.addEventListener("error", () => connected.reject());
 
-  let connection: SessionConnection | undefined = undefined;
+  let session: SessionConnection | undefined = undefined;
 
   socket.addEventListener("message", event => {
     if (!(event.data instanceof ArrayBuffer)) return;
@@ -155,14 +155,14 @@ async function connectViaSocket(socket: WebSocket): Promise<SessionConnection> {
 
     if (packet.type === "Handshake") {
       handshake.resolve(packet);
-    } else if (connection) connection.fire(ReceivedPacket, packet);
+    } else if (session) session.fire(ReceivedPacket, packet);
   });
 
   await connected.promise;
   const handshakePacket = await handshake.promise;
-  connection = new SessionConnection(socket, handshakePacket);
-  window.addEventListener("beforeunload", () => connection.dispose());
-  return connection;
+  session = new SessionConnection(socket, handshakePacket);
+  window.addEventListener("beforeunload", () => session.dispose());
+  return session;
 }
 
 export const connectToSession = (user: UserInfo, session: string) =>

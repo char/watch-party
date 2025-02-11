@@ -23,10 +23,10 @@ export const app = {
     });
   }),
 
-  connection: new LazySignal<SessionConnection>(),
+  session: new LazySignal<SessionConnection>(),
   connect: async () => {
-    const session = app.sessionId.get();
-    if (!session) return;
+    const sessionId = app.sessionId.get();
+    if (!sessionId) return;
 
     const user = app.user.get();
     if (!user) return;
@@ -34,12 +34,12 @@ export const app = {
     if (connecting) return;
     try {
       connecting = true;
-      const connection = await connectToSession(user, session);
+      const session = await connectToSession(user, sessionId);
 
-      const existingConnection = app.connection.get();
-      if (existingConnection) existingConnection.dispose();
+      const existingSession = app.session.get();
+      if (existingSession) existingSession.dispose();
 
-      app.connection.set(connection);
+      app.session.set(session);
     } finally {
       connecting = false;
     }
@@ -60,5 +60,4 @@ export const app = {
 };
 
 Object.defineProperty(globalThis, "app", { value: app });
-Object.defineProperty(globalThis, "connection", { get: () => app.connection.get() });
-Object.defineProperty(globalThis, "session", { get: () => app.connection.get()?.video });
+Object.defineProperty(globalThis, "session", { get: () => app.session.get() });

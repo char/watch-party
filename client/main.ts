@@ -17,9 +17,9 @@ const creationForm = createCreationForm(id => {
 });
 linkForms(connectForm, creationForm);
 
-if (!app.connection.get()) main.append(connectForm);
+if (!app.session.get()) main.append(connectForm);
 
-app.connection.subscribeImmediate(conn => {
+app.session.subscribeImmediate(conn => {
   connectForm.remove();
   const player = createPlayer(conn);
   conn.abort.addEventListener("abort", () => {
