@@ -126,6 +126,9 @@ export class ChatWindow {
               <li>
                 <kbd>/list</kbd> - lists all peers in the room
               </li>
+              <li>
+                <kbd>/lock</kbd> - locks video controls (forces resync on video events)
+              </li>
             </ul>
           </article>,
         );
@@ -159,11 +162,22 @@ export class ChatWindow {
   #handlePlayheadOverride() {
     this.session.video.on(PlayheadOverride, event => {
       if (event.originator === "server") {
-        this.append(
-          <article className="system playhead">
+        const msg = (
+          <article className="system playhead" dataset={{ fromServer: "" }}>
             you have been synced to {formatTime(event.playhead)}.
-          </article>,
+          </article>
         );
+
+        if (
+          this.#lastMessage?.classList.contains("playhead") &&
+          (this.#lastMessage as HTMLElement).dataset.fromServer
+        ) {
+          this.#lastMessage.insertAdjacentElement("beforebegin", msg);
+          this.#lastMessage.remove();
+          this.#lastMessage = msg;
+        } else {
+          this.append(msg);
+        }
         return;
       }
       if (event.originator === "local" && app.locked.get()) return;

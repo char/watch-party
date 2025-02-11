@@ -38,6 +38,7 @@ export function createPlayer(session: SessionConnection) {
           })}
       </video>
     ) as HTMLVideoElement;
+    video.volume = 0.8;
     videoElement = video;
 
     video.currentTime = session.video.playhead / 1000;
