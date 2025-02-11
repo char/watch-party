@@ -71,8 +71,8 @@ export function createPlayer(connection: SessionConnection) {
     };
 
     video.addEventListener("seeking", changePlayhead);
-    video.addEventListener("seeked", changePlayhead);
-    video.addEventListener("playing", changePlayhead);
+    // video.addEventListener("seeked", changePlayhead);
+    // video.addEventListener("playing", changePlayhead);
     video.addEventListener("play", changePaused(false));
     video.addEventListener("pause", changePaused(true));
 

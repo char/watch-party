@@ -104,12 +104,6 @@ router.use(async (ctx, next) => {
   }
 });
 
-new WatchSession("test").tap(it => {
-  it.playlist = [{ video: "https://umm.gay/tmp/tenet.mp4", subtitles: [] }];
-  it.lastPlayhead = 603377;
-  // it.playedAt = Temporal.Now.instant();
-});
-
 const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
