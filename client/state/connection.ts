@@ -1,13 +1,13 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
+import { LazySignal } from "@char/aftercare";
+import { Peer } from "../../common/peer.ts";
 import { ClientPacket, ServerPacket, ServerPacketSchema } from "../../common/proto.ts";
 import { BasicSignalHandler } from "../signals.ts";
 import { app, UserInfo } from "./app.ts";
 import { PlayheadOverride, PlaylistChange, VideoState } from "./video-state.ts";
 
-export interface Peer {
-  connectionId: string;
-  nickname: string;
-  displayColor: string;
+export interface ClientPeer extends Peer {
+  playhead: LazySignal<{ time: number; paused: boolean }>;
 }
 
 export class ReceivedPacket {
@@ -30,8 +30,8 @@ export class SessionConnection extends BasicSignalHandler {
     return this.#abort.signal;
   }
 
-  user: Peer;
-  peers = new Map<string, Peer>();
+  user: ClientPeer;
+  peers = new Map<string, ClientPeer>();
   video: VideoState;
 
   constructor(
@@ -44,6 +44,7 @@ export class SessionConnection extends BasicSignalHandler {
       connectionId: handshakePacket.connectionId,
       nickname: handshakePacket.nickname,
       displayColor: handshakePacket.displayColor,
+      playhead: new LazySignal(),
     };
     this.peers.set(this.user.connectionId, this.user);
     this.video = new VideoState(handshakePacket.session);
@@ -70,6 +71,7 @@ export class SessionConnection extends BasicSignalHandler {
 
     this.#handlePeerListChanges();
     this.#handlePlayheadChanges();
+    this.#handlePlayheadReports();
   }
   send(packet: ClientPacket) {
     this.socket.send(encodeCbor(packet));
@@ -84,7 +86,8 @@ export class SessionConnection extends BasicSignalHandler {
       switch (packet.type) {
         case "FullPeerList": {
           this.peers.clear();
-          for (const peer of packet.peers) this.peers.set(peer.connectionId, peer);
+          for (const peer of packet.peers)
+            this.peers.set(peer.connectionId, { ...peer, playhead: new LazySignal() });
           break;
         }
         case "PeerAdded": {
@@ -93,7 +96,7 @@ export class SessionConnection extends BasicSignalHandler {
             nickname: packet.nickname,
             displayColor: packet.displayColor,
           };
-          this.peers.set(peer.connectionId, peer);
+          this.peers.set(peer.connectionId, { ...peer, playhead: new LazySignal() });
           this.fire(PeerJoined, peer);
           break;
         }
@@ -129,6 +132,15 @@ export class SessionConnection extends BasicSignalHandler {
         return;
       }
       this.send({ type: "ChangePlayhead", playhead: event.playhead, paused: event.paused });
+    });
+  }
+
+  #handlePlayheadReports() {
+    this.on(ReceivedPacket, ({ packet }) => {
+      if (packet.type !== "ReportPlayhead") return;
+      const peer = this.peers.get(packet.from);
+      if (!peer) return;
+      peer.playhead.set({ time: packet.playhead, paused: packet.paused });
     });
   }
 }

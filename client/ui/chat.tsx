@@ -1,15 +1,15 @@
 import { Signal } from "@char/aftercare";
+import { Peer } from "../../common/peer.ts";
 import { ServerPacket } from "../../common/proto.ts";
 import { app } from "../state/app.ts";
 import {
-  Peer,
   PeerJoined,
   PeerLeft,
   ReceivedPacket,
   SessionConnection,
 } from "../state/connection.ts";
 import { PlayheadOverride } from "../state/video-state.ts";
-import { bindValue, onEvent } from "../util.ts";
+import { bindValue, formatTime, onEvent } from "../util.ts";
 
 function ChatMessage(
   from: Peer,
@@ -35,15 +35,6 @@ function ChatMessage(
   // TODO: render rich text facets i cba rn
 
   return message;
-}
-
-function formatTime(ms: number): string {
-  const seconds = Math.floor((ms / 1000) % 60);
-  const minutes = Math.floor((ms / (60 * 1000)) % 60);
-  const hours = Math.floor((ms / (3600 * 1000)) % 3600);
-  return `${hours < 10 ? "0" + hours : hours}:${
-    minutes < 10 ? "0" + minutes : minutes
-  }:${seconds < 10 ? "0" + seconds : seconds}`;
 }
 
 export class ChatWindow {

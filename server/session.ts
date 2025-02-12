@@ -1,5 +1,6 @@
 import { encode as encodeCbor } from "@atcute/cbor";
 
+import { Peer } from "../common/peer.ts";
 import { PlaylistItem } from "../common/playlist.ts";
 import { ChatFacet, ServerPacket } from "../common/proto.ts";
 import { SessionConnection } from "./connection.ts";
@@ -10,10 +11,10 @@ export class WatchSession {
   connections: SessionConnection[] = [];
 
   chatHistory: {
-    from: { nickname: string; connectionId: string; displayColor: string };
+    from: Peer;
     text: string;
-    facets?: ChatFacet[];
-    system?: boolean;
+    facets: ChatFacet[];
+    system: boolean;
   }[] = [];
 
   playlist: PlaylistItem[] = [];
@@ -96,7 +97,7 @@ export class WatchSession {
       type: "PeerAdded",
       ...peer,
     });
-    this.chatHistory.push({ from: peer, text: "joined", system: true });
+    this.chatHistory.push({ from: peer, text: "joined", facets: [], system: true });
   }
 
   dropPeer(
@@ -112,6 +113,7 @@ export class WatchSession {
         displayColor: connection.displayColor,
       },
       text: "left",
+      facets: [],
       system: true,
     });
   }

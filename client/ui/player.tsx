@@ -85,5 +85,15 @@ export function createPlayer(session: SessionConnection) {
     videoContainer.append(video);
   });
 
+  const reportInterval = setInterval(() => {
+    if (!videoElement) return;
+    session.send({
+      type: "ReportPlayhead",
+      playhead: videoElement.currentTime * 1000,
+      paused: videoElement.paused,
+    });
+  }, 500);
+  session.abort.addEventListener("abort", () => clearInterval(reportInterval));
+
   return player;
 }

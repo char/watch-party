@@ -59,6 +59,15 @@ const RequestPlayheadSyncSchema = v.object({
   type: v.literal("RequestPlayheadSync"),
 });
 
+const ReportPlayheadSchema = v.object({
+  type: v.literal("ReportPlayhead"),
+  playhead: v.number(),
+  paused: v.boolean(),
+});
+const ServerReportPlayheadSchema = ReportPlayheadSchema.extend({
+  from: ConnectionIdSchema,
+});
+
 const ChatFacetSchema = v.union(
   ...[
     v.object({ type: v.literal("link"), link: v.string() }),
@@ -88,8 +97,8 @@ const ChatHistorySchema = v.object({
         displayColor: v.string(),
       }),
       text: v.string(),
-      facets: ChatFacetSchema.pipe(v.array).optional(() => []),
-      system: v.boolean().optional(() => false),
+      facets: ChatFacetSchema.pipe(v.array),
+      system: v.boolean(),
     })
     .pipe(v.array),
 });
@@ -100,6 +109,7 @@ export const ClientPacketSchema = v.union(
   RequestPeerListSchema,
   ChangePlayheadSchema,
   RequestPlayheadSyncSchema,
+  ReportPlayheadSchema,
 );
 
 export const ServerPacketSchema = v.union(
@@ -110,6 +120,7 @@ export const ServerPacketSchema = v.union(
   FullUserListSchema,
   ServerChangePlayheadSchema,
   ChatHistorySchema,
+  ServerReportPlayheadSchema,
 );
 
 type MaybeSpecific<Packet, Type extends string | undefined> = Packet &

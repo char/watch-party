@@ -98,8 +98,14 @@ export function handleConnection(
           },
           text: packet.text,
           facets: packet.facets,
+          system: false,
         });
         session.broadcast({ ...packet, type: "ChatMessage", from: connection.id });
+        break;
+      }
+
+      case "ReportPlayhead": {
+        session.broadcast({ ...packet, type: "ReportPlayhead", from: connection.id });
         break;
       }
     }
