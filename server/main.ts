@@ -2,7 +2,7 @@ import "https://char.lt/esm/pipe.ts";
 
 import { Application, HttpError, Router, Status } from "@oak/oak";
 import { handleConnection, SessionConnection } from "./connection.ts";
-import { WatchSession } from "./sessions.ts";
+import { WatchSession } from "./session.ts";
 import { apiHandler } from "./util/api.ts";
 import { randomBase32 } from "./util/base32.ts";
 

@@ -3,23 +3,40 @@ import { PlaylistItemSchema } from "./playlist.ts";
 
 const ConnectionIdSchema = v.string();
 
+const ChatFacetSchema = v.union(
+  ...[
+    v.object({ type: v.literal("link"), link: v.string() }),
+    v.object({ type: v.literal("strong") }),
+    v.object({ type: v.literal("emphasis") }),
+    v.object({ type: v.literal("custom-emoji"), id: v.string() }),
+    v.object({ type: v.literal("color"), color: v.string() }),
+  ].map(it => it.extend({ start: v.number(), end: v.number() })), // utf-16 code units
+);
+export type ChatFacet = v.Infer<typeof ChatFacetSchema>;
+
 const ChatMessageSchema = v.object({
   type: v.literal("ChatMessage"),
   text: v.string(),
-  facets: v
-    .union(
-      ...[
-        v.object({ type: v.literal("link"), link: v.string() }),
-        v.object({ type: v.literal("strong") }),
-        v.object({ type: v.literal("emphasis") }),
-        v.object({ type: v.literal("custom-emoji"), id: v.string() }),
-        v.object({ type: v.literal("color"), color: v.string() }),
-      ].map(it => it.extend({ start: v.number(), end: v.number() })), // utf-16 code units
-    )
-    .pipe(v.array),
+  facets: ChatFacetSchema.pipe(v.array),
 });
 
 const ServerChatMessageSchema = ChatMessageSchema.extend({ from: ConnectionIdSchema });
+
+const ChatHistorySchema = v.object({
+  type: v.literal("ChatHistory"),
+  messages: v
+    .object({
+      from: v.object({
+        connectionId: v.string(),
+        nickname: v.string(),
+        displayColor: v.string(),
+      }),
+      text: v.string(),
+      facets: ChatFacetSchema.pipe(v.array).optional(() => []),
+      system: v.boolean().optional(() => false),
+    })
+    .pipe(v.array),
+});
 
 const HandshakeSchema = v.object({
   type: v.literal("Handshake"),
@@ -92,6 +109,7 @@ export const ServerPacketSchema = v.union(
   ServerChatMessageSchema,
   FullUserListSchema,
   ServerChangePlayheadSchema,
+  ChatHistorySchema,
 );
 
 type MaybeSpecific<Packet, Type extends string | undefined> = Packet &

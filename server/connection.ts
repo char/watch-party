@@ -1,6 +1,6 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { ClientPacket, ClientPacketSchema, ServerPacket } from "../common/proto.ts";
-import { WatchSession } from "./sessions.ts";
+import { WatchSession } from "./session.ts";
 
 export interface SessionConnection {
   id: string;
@@ -38,6 +38,11 @@ export function handleConnection(
       paused: session.paused,
       playhead: session.playhead(now),
       playheadTimestamp: now.epochMilliseconds,
+    });
+
+    send({
+      type: "ChatHistory",
+      messages: session.chatHistory,
     });
   };
   const onMessage = (frame: Uint8Array) => {
@@ -85,6 +90,15 @@ export function handleConnection(
       }
 
       case "ChatMessage": {
+        session.chatHistory.push({
+          from: {
+            connectionId: connection.id,
+            nickname: connection.nickname,
+            displayColor: connection.displayColor,
+          },
+          text: packet.text,
+          facets: packet.facets,
+        });
         session.broadcast({ ...packet, type: "ChatMessage", from: connection.id });
         break;
       }

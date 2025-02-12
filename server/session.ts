@@ -1,13 +1,20 @@
 import { encode as encodeCbor } from "@atcute/cbor";
 
 import { PlaylistItem } from "../common/playlist.ts";
-import { ServerPacket } from "../common/proto.ts";
+import { ChatFacet, ServerPacket } from "../common/proto.ts";
 import { SessionConnection } from "./connection.ts";
 
 export class WatchSession {
   static SESSIONS = new Map<string, WatchSession>();
 
   connections: SessionConnection[] = [];
+
+  chatHistory: {
+    from: { nickname: string; connectionId: string; displayColor: string };
+    text: string;
+    facets?: ChatFacet[];
+    system?: boolean;
+  }[] = [];
 
   playlist: PlaylistItem[] = [];
   playlistIndex: number = -1;
@@ -79,12 +86,17 @@ export class WatchSession {
   addPeer(connection: SessionConnection) {
     this.connections.push(connection);
 
-    this.broadcast({
-      type: "PeerAdded",
+    const peer = {
       connectionId: connection.id,
       nickname: connection.nickname,
       displayColor: connection.displayColor,
+    };
+
+    this.broadcast({
+      type: "PeerAdded",
+      ...peer,
     });
+    this.chatHistory.push({ from: peer, text: "joined", system: true });
   }
 
   dropPeer(
@@ -93,5 +105,14 @@ export class WatchSession {
   ) {
     this.connections = this.connections.filter(it => it !== connection);
     this.broadcast({ type: "PeerDropped", connectionId: connection.id, reason });
+    this.chatHistory.push({
+      from: {
+        connectionId: connection.id,
+        nickname: connection.nickname,
+        displayColor: connection.displayColor,
+      },
+      text: "left",
+      system: true,
+    });
   }
 }

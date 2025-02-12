@@ -65,6 +65,7 @@ export class ChatWindow {
     this.#handleChat();
     this.#handleJoinLeave();
     this.#handlePlayheadOverride();
+    this.#handleChatHistory();
   }
 
   append(message: Element) {
@@ -206,6 +207,20 @@ export class ChatWindow {
       } else {
         this.append(msg);
       }
+    });
+  }
+
+  #handleChatHistory() {
+    this.session.on(ReceivedPacket, ({ packet }) => {
+      if (packet.type !== "ChatHistory") return;
+
+      this.messages.querySelector("#history")?.remove();
+      const history = <div id="history" />;
+      for (const message of packet.messages) {
+        history.append(ChatMessage(message.from, message.text, message.facets, message.system));
+      }
+
+      this.messages.prepend(history);
     });
   }
 
