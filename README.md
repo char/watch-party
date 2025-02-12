@@ -16,9 +16,8 @@ Listening on: http://…
 
 ## todo
 
-- chat commands
-- seamless reconnection when websocket drops
 - peer list above chat
 - periodic playhead reporting, debug overview where you can view everyone's timestamp
 - chat formatting
 - playlist manipulation
+- seamless reconnection when websocket drops

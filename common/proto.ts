@@ -3,6 +3,62 @@ import { PlaylistItemSchema } from "./playlist.ts";
 
 const ConnectionIdSchema = v.string();
 
+const HandshakeSchema = v.object({
+  type: v.literal("Handshake"),
+  nickname: v.string(),
+  displayColor: v.string(),
+
+  connectionId: v.string(),
+  resumptionToken: v.string(),
+
+  session: v.string(),
+  playlist: PlaylistItemSchema.pipe(v.array),
+  playlistIndex: v.number(),
+  paused: v.boolean(),
+  playhead: v.number(),
+  playheadTimestamp: v.number(),
+});
+
+const PeerAddedSchema = v.object({
+  type: v.literal("PeerAdded"),
+  connectionId: ConnectionIdSchema,
+  nickname: v.string(),
+  displayColor: v.string(),
+});
+
+const PeerDroppedSchema = v.object({
+  type: v.literal("PeerDropped"),
+  connectionId: ConnectionIdSchema,
+  reason: v.union(v.literal("disconnect"), v.literal("timeout")),
+});
+
+const RequestPeerListSchema = v.object({
+  type: v.literal("RequestPeerList"),
+});
+const FullUserListSchema = v.object({
+  type: v.literal("FullPeerList"),
+  peers: v
+    .object({ connectionId: v.string(), nickname: v.string(), displayColor: v.string() })
+    .pipe(v.array),
+});
+
+const LeaveSessionSchema = v.object({
+  type: v.literal("LeaveSession"),
+});
+
+const ChangePlayheadSchema = v.object({
+  type: v.literal("ChangePlayhead"),
+  playhead: v.number(),
+  paused: v.boolean(),
+});
+const ServerChangePlayheadSchema = ChangePlayheadSchema.extend({
+  from: ConnectionIdSchema.optional(),
+});
+
+const RequestPlayheadSyncSchema = v.object({
+  type: v.literal("RequestPlayheadSync"),
+});
+
 const ChatFacetSchema = v.union(
   ...[
     v.object({ type: v.literal("link"), link: v.string() }),
@@ -36,62 +92,6 @@ const ChatHistorySchema = v.object({
       system: v.boolean().optional(() => false),
     })
     .pipe(v.array),
-});
-
-const HandshakeSchema = v.object({
-  type: v.literal("Handshake"),
-  nickname: v.string(),
-  displayColor: v.string(),
-
-  connectionId: v.string(),
-  resumptionToken: v.string(),
-
-  session: v.string(),
-  playlist: PlaylistItemSchema.pipe(v.array),
-  playlistIndex: v.number(),
-  paused: v.boolean(),
-  playhead: v.number(),
-  playheadTimestamp: v.number(),
-});
-
-const PeerAddedSchema = v.object({
-  type: v.literal("PeerAdded"),
-  connectionId: ConnectionIdSchema,
-  nickname: v.string(),
-  displayColor: v.string(),
-});
-
-const PeerDroppedSchema = v.object({
-  type: v.literal("PeerDropped"),
-  connectionId: ConnectionIdSchema,
-  reason: v.union(v.literal("disconnect"), v.literal("timeout")),
-});
-
-const LeaveSessionSchema = v.object({
-  type: v.literal("LeaveSession"),
-});
-
-const RequestPeerListSchema = v.object({
-  type: v.literal("RequestPeerList"),
-});
-const FullUserListSchema = v.object({
-  type: v.literal("FullPeerList"),
-  peers: v
-    .object({ connectionId: v.string(), nickname: v.string(), displayColor: v.string() })
-    .pipe(v.array),
-});
-
-const ChangePlayheadSchema = v.object({
-  type: v.literal("ChangePlayhead"),
-  playhead: v.number(),
-  paused: v.boolean(),
-});
-const ServerChangePlayheadSchema = ChangePlayheadSchema.extend({
-  from: ConnectionIdSchema.optional(),
-});
-
-const RequestPlayheadSyncSchema = v.object({
-  type: v.literal("RequestPlayheadSync"),
 });
 
 export const ClientPacketSchema = v.union(
