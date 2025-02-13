@@ -231,6 +231,7 @@ export class ChatWindow {
             this.executeCommand(message.substring(1));
           } else {
             this.session.send({ type: "ChatMessage", text: message, facets: [] });
+            this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
           }
           messageToSend.set("");
         })}
