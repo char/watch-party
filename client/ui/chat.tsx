@@ -211,7 +211,11 @@ export class ChatWindow {
         history.append(ChatMessage(message.from, message.text, message.facets, message.system));
       }
 
+      const scrolledToBottom =
+        this.messages.scrollTop >= this.messages.scrollHeight - this.messages.clientHeight;
       this.messages.prepend(history);
+      if (scrolledToBottom)
+        this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
     });
   }
 
