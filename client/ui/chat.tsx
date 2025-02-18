@@ -61,7 +61,7 @@ export class ChatWindow {
 
   append(message: Element) {
     const scrolledToBottom =
-      this.messages.scrollTop >= this.messages.scrollHeight - this.messages.clientHeight;
+      this.messages.scrollTop + 16 >= this.messages.scrollHeight - this.messages.clientHeight;
     this.messages.append(message);
     if (scrolledToBottom)
       this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
@@ -212,7 +212,7 @@ export class ChatWindow {
       }
 
       const scrolledToBottom =
-        this.messages.scrollTop >= this.messages.scrollHeight - this.messages.clientHeight;
+        this.messages.scrollTop + 16 >= this.messages.scrollHeight - this.messages.clientHeight;
       this.messages.prepend(history);
       if (scrolledToBottom)
         this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
