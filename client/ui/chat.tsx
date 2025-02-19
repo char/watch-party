@@ -122,7 +122,7 @@ export class ChatWindow {
             cue.dispatchEvent(new Event("exit"));
           }
           // idk
-          track.mode = "hidden";
+          track.mode = "disabled";
           track.mode = "showing";
         }
 
