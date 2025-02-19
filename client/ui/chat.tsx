@@ -119,7 +119,11 @@ export class ChatWindow {
           for (const cue of Array.from(track.cues)) {
             cue.startTime += milliseconds / 1000;
             cue.endTime += milliseconds / 1000;
+            cue.dispatchEvent(new Event("exit"));
           }
+          // idk
+          track.mode = "hidden";
+          track.mode = "showing";
         }
 
         break;
