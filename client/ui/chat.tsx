@@ -107,6 +107,23 @@ export class ChatWindow {
         );
         break;
       }
+      case "subdelay": {
+        const milliseconds = parseFloat(args[1]);
+        if (Number.isNaN(milliseconds)) return;
+
+        // TODO: store the video element in the videostate
+        const video = document.querySelector("video")!;
+        for (const track of Array.from(video.textTracks)) {
+          if (track.mode !== "showing") continue;
+          if (!track.cues) continue;
+          for (const cue of Array.from(track.cues)) {
+            cue.startTime += milliseconds / 1000;
+            cue.endTime += milliseconds / 1000;
+          }
+        }
+
+        break;
+      }
       case "help": {
         this.append(
           <article>
@@ -120,6 +137,9 @@ export class ChatWindow {
               </li>
               <li>
                 <kbd>/lock</kbd> - locks video controls (forces resync on video events)
+              </li>
+              <li>
+                <kbd>/subdelay [ms]</kbd> - bump subtitle delay (positive = later)
               </li>
             </ul>
           </article>,
