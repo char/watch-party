@@ -126,6 +126,12 @@ export class ChatWindow {
           track.mode = "showing";
         }
 
+        this.append(
+          <article className="system">
+            tweaked subtitle delay by <strong>{milliseconds.toFixed(0)}ms</strong>.
+          </article>,
+        );
+
         break;
       }
       case "help": {
