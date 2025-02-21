@@ -13,6 +13,26 @@ export function createPlayer(session: SessionConnection) {
   );
   const videoContainer = player.querySelector("#video-container")!;
 
+  {
+    const resizer = player.querySelector("#chat-resizer") as HTMLElement;
+    let resizingX: number | undefined = undefined;
+
+    resizer.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      resizingX = e.clientX;
+    });
+    window.addEventListener("pointermove", e => {
+      if (resizingX === undefined) return;
+      const playerRect = player.getBoundingClientRect();
+      const width = playerRect.right - e.clientX - resizer.getBoundingClientRect().width / 2;
+      const widthPct = (width / playerRect.width) * 100;
+      player.style.setProperty("--chat-width", `${widthPct.toFixed(2)}%`);
+    });
+    window.addEventListener("pointerup", e => {
+      resizingX = undefined;
+    });
+  }
+
   const noCurrentVideo = (
     <div className="video-status">There is no video currently playing.</div>
   );
