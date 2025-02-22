@@ -7,6 +7,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
   const id = new Signal("");
   const video = new Signal("");
 
+  const mirrors = new MirrorsContainer();
   const subtitles = new SubtitlesContainer();
 
   return (
@@ -21,6 +22,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
             playlist: [
               {
                 video: video.get(),
+                mirrors: mirrors.mirrors.map(it => it.get()),
                 subtitles: subtitles.subtitles.map(it => ({
                   name: it.name.get() || "English",
                   url: it.url.get(),
@@ -34,6 +36,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
           .parse(await response.json(), { mode: "passthrough" });
         createCallback(info.id);
       })}
+      id="create-form"
     >
       <label htmlFor="session-id">
         id <small>(leave blank to generate random)</small>
@@ -48,6 +51,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
         placeholder="https://example.com/my-movie.mp4"
         required
       />
+      {mirrors.elem}
 
       <label>subtitles</label>
       {subtitles.elem}
@@ -56,6 +60,48 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
     </form>
   );
 };
+
+class MirrorsContainer {
+  addButton = (<button>add mirror</button>);
+  elem = (<div id="mirrors" />);
+
+  mirrors: Signal<string>[] = [];
+
+  constructor() {
+    this.elem.append(this.addButton);
+    this.addButton.style.maxWidth = "fit-content";
+    this.addButton.addEventListener("click", e => {
+      e.preventDefault();
+      this.add();
+    });
+  }
+
+  add() {
+    const mirror = new Signal("");
+    const group = (
+      <div className="group">
+        <input
+          _tap={bindValue(mirror)}
+          type="url"
+          placeholder="https://…/my-video.mp4"
+          required
+        />
+        <button
+          _tap={onEvent("click", () => {
+            this.mirrors = this.mirrors.filter(it => it !== mirror);
+            group.remove();
+          })}
+          className="danger"
+        >
+          -
+        </button>
+      </div>
+    );
+    this.mirrors.push(mirror);
+    this.elem.append(group);
+    this.elem.append(this.addButton);
+  }
+}
 
 class SubtitlesContainer {
   addButton = (<button>add</button>);

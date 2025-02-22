@@ -1,5 +1,7 @@
+import { PlaylistItem } from "../../common/playlist.ts";
 import { SessionConnection } from "../state/connection.ts";
 import { PlayheadOverride } from "../state/video-state.ts";
+import { onEvent } from "../util.ts";
 import { ChatWindow } from "./chat.tsx";
 
 export function createPlayer(session: SessionConnection) {
@@ -37,21 +39,14 @@ export function createPlayer(session: SessionConnection) {
     <div className="video-status">There is no video currently playing.</div>
   );
   let videoElement: HTMLVideoElement | undefined = undefined;
-  session.video.currentVideo.subscribeImmediate(videoItem => {
-    if (videoItem === undefined) {
-      videoContainer.append(noCurrentVideo);
-      videoElement?.remove();
-      return;
-    } else {
-      noCurrentVideo.remove();
-    }
-
+  const showVideo = (url: string, subtitles: PlaylistItem["subtitles"]) => {
+    noCurrentVideo.remove();
     if (videoElement !== undefined) videoElement.remove();
 
     const video = (
       <video crossOrigin="anonymous" controls>
-        <source src={videoItem.video} />
-        {...videoItem.subtitles
+        <source src={url} />
+        {...subtitles
           .map(s => (<track kind="captions" label={s.name} src={s.url} />) as HTMLTrackElement)
           .tap(list => {
             if (list[0]) list[0].default = true;
@@ -60,7 +55,6 @@ export function createPlayer(session: SessionConnection) {
     ) as HTMLVideoElement;
     video.volume = 0.8;
     videoElement = video;
-
     video.currentTime = session.video.playhead / 1000;
     if (!session.video.paused) void video.play();
 
@@ -103,6 +97,50 @@ export function createPlayer(session: SessionConnection) {
     video.addEventListener("pause", changePaused(true));
 
     videoContainer.append(video);
+  };
+
+  session.video.currentVideo.subscribeImmediate(videoItem => {
+    if (videoItem === undefined) {
+      videoContainer.append(noCurrentVideo);
+      videoElement?.remove();
+      return;
+    } else {
+      noCurrentVideo.remove();
+    }
+
+    if (videoItem.mirrors.length) {
+      // TODO: show a mirror picker :3
+      const picker = (
+        <div id="mirror-picker">
+          <h2>select a mirror:</h2>
+
+          <button
+            role="button"
+            _tap={onEvent("click", () => {
+              picker.remove();
+              showVideo(videoItem.video, videoItem.subtitles);
+            })}
+          >
+            {videoItem.video}
+          </button>
+
+          {...videoItem.mirrors.map(mirror => (
+            <button
+              role="button"
+              _tap={onEvent("click", () => {
+                picker.remove();
+                showVideo(mirror, videoItem.subtitles);
+              })}
+            >
+              {mirror}
+            </button>
+          ))}
+        </div>
+      );
+      videoContainer.append(picker);
+    } else {
+      showVideo(videoItem.video, videoItem.subtitles);
+    }
   });
 
   const reportInterval = setInterval(() => {

@@ -1,5 +1,6 @@
 :root {
   --color-bg: 28 23 36;
+  --color-bg-x: 39 31 51;
   --color-fg: 255 255 255;
   --color-accent: 181 127 220;
   --color-accent-x: 161 86 214;
@@ -68,5 +69,13 @@ input[type="color"] {
     border: none;
     margin: 0;
     padding: 0;
+  }
+}
+
+#create-form #mirrors {
+  display: contents;
+
+  .group > input {
+    flex: 1;
   }
 }

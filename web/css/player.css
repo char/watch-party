@@ -55,3 +55,24 @@
     padding-top: 0.5em;
   }
 }
+
+#mirror-picker {
+  width: 100%;
+  max-width: 60ch;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1em;
+
+  button {
+    background-color: rgb(var(--color-bg) / 1);
+    border-radius: 0;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgb(var(--color-bg-x) / 1);
+    }
+  }
+}
