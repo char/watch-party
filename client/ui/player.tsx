@@ -30,7 +30,7 @@ export function createPlayer(session: SessionConnection) {
       const widthPct = (width / playerRect.width) * 100;
       player.style.setProperty("--chat-width", `${widthPct.toFixed(2)}%`);
     });
-    window.addEventListener("pointerup", e => {
+    window.addEventListener("pointerup", () => {
       resizingX = undefined;
     });
   }
@@ -115,7 +115,7 @@ export function createPlayer(session: SessionConnection) {
           <h2>select a mirror:</h2>
 
           <button
-            role="button"
+            type="button"
             _tap={onEvent("click", () => {
               picker.remove();
               showVideo(videoItem.video, videoItem.subtitles);
@@ -126,7 +126,7 @@ export function createPlayer(session: SessionConnection) {
 
           {...videoItem.mirrors.map(mirror => (
             <button
-              role="button"
+              type="button"
               _tap={onEvent("click", () => {
                 picker.remove();
                 showVideo(mirror, videoItem.subtitles);

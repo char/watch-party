@@ -44,7 +44,7 @@ export const createConnectForm = () => {
         required
       />
 
-      <button role="submit">join</button>
+      <button type="submit">join</button>
     </form>
   );
 

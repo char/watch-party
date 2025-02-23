@@ -56,13 +56,13 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
       <label>subtitles</label>
       {subtitles.elem}
 
-      <button role="submit">create</button>
+      <button type="submit">create</button>
     </form>
   );
 };
 
 class MirrorsContainer {
-  addButton = (<button>add mirror</button>);
+  addButton = (<button type="button">add mirror</button>);
   elem = (<div id="mirrors" />);
 
   mirrors: Signal<string>[] = [];
@@ -87,6 +87,7 @@ class MirrorsContainer {
           required
         />
         <button
+          type="button"
           _tap={onEvent("click", () => {
             this.mirrors = this.mirrors.filter(it => it !== mirror);
             group.remove();
@@ -136,7 +137,7 @@ class SubtitlesContainer {
       group.remove();
     };
     group.append(
-      <button _tap={onEvent("click", () => remove())} className="danger">
+      <button _tap={onEvent("click", () => remove())} type="button" className="danger">
         -
       </button>,
     );
