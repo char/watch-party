@@ -53,7 +53,11 @@ export function createPlayer(session: SessionConnection) {
           })}
       </video>
     ) as HTMLVideoElement;
-    video.volume = 0.8;
+    video.volume =
+      localStorage
+        .getItem("watch-party/last-volume")
+        ?.pipe(Number)
+        .pipe(it => (Number.isFinite(it) ? it : undefined)) ?? 0.8;
     videoElement = video;
     video.currentTime = session.video.playhead / 1000;
     if (!session.video.paused) void video.play();
@@ -95,6 +99,10 @@ export function createPlayer(session: SessionConnection) {
     // video.addEventListener("playing", changePlayhead);
     video.addEventListener("play", changePaused(false));
     video.addEventListener("pause", changePaused(true));
+
+    video.addEventListener("volumechange", () => {
+      localStorage.setItem("watch-party/last-volume", String(video.volume));
+    });
 
     videoContainer.append(video);
   };
