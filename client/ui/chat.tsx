@@ -48,7 +48,7 @@ export class ChatWindow {
 
     this.window = (
       <div id="chat-window">
-        <div id="chat-messages-wrapper">{this.messages}</div>
+        {this.messages}
         {this.#createSendForm()}
       </div>
     );
@@ -60,7 +60,11 @@ export class ChatWindow {
   }
 
   append(message: Element) {
+    const scrolledToBottom =
+      this.messages.scrollTop + 16 >= this.messages.scrollHeight - this.messages.clientHeight;
     this.messages.append(message);
+    if (scrolledToBottom)
+      this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
     this.#lastMessage = message;
   }
 
@@ -237,7 +241,11 @@ export class ChatWindow {
         history.append(ChatMessage(message.from, message.text, message.facets, message.system));
       }
 
+      const scrolledToBottom =
+        this.messages.scrollTop + 16 >= this.messages.scrollHeight - this.messages.clientHeight;
       this.messages.prepend(history);
+      if (scrolledToBottom)
+        this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
     });
   }
 
@@ -257,6 +265,7 @@ export class ChatWindow {
             this.executeCommand(message.substring(1));
           } else {
             this.session.send({ type: "ChatMessage", text: message, facets: [] });
+            this.messages.scrollTop = this.messages.scrollHeight - this.messages.clientHeight;
           }
           messageToSend.set("");
         })}

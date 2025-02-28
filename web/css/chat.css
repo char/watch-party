@@ -3,19 +3,14 @@
   flex-direction: column;
   flex: 1;
 
-  #chat-messages-wrapper {
+  #chat-messages {
     flex: 1;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
 
     max-height: calc(-4em + 100vh);
     overflow-y: scroll;
     padding-bottom: 1em;
-  }
-
-  #chat-messages {
-    display: flex;
-    flex-direction: column;
 
     article {
       margin: 0;
