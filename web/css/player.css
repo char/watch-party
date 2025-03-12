@@ -25,11 +25,13 @@
     }
   }
 
-  #chat-resizer {
+  #sidebar-resizer {
     min-width: 8px;
     height: 100%;
     cursor: ew-resize;
     padding: 0 0.5em;
+    margin-right: -0.5em;
+    z-index: 99;
 
     &::before {
       display: inline-block;
@@ -39,7 +41,7 @@
     }
   }
 
-  #chat-container {
+  #sidebar {
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -51,7 +53,7 @@
     min-width: var(--chat-width);
 
     padding: 1em;
-    padding-left: 0;
+    margin-left: -0.5em;
     padding-top: 0.5em;
   }
 }

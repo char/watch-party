@@ -9,14 +9,14 @@ export function createPlayer(session: SessionConnection) {
   const player = (
     <div id="player">
       <div id="video-container"></div>
-      <div id="chat-resizer"></div>
-      <div id="chat-container">{chat.window}</div>
+      <div id="sidebar-resizer"></div>
+      <div id="sidebar">{chat.window}</div>
     </div>
   );
   const videoContainer = player.querySelector("#video-container")!;
 
   {
-    const resizer = player.querySelector("#chat-resizer") as HTMLElement;
+    const resizer = player.querySelector("#sidebar-resizer") as HTMLElement;
     let resizingX: number | undefined = undefined;
 
     resizer.addEventListener("pointerdown", e => {
@@ -26,7 +26,7 @@ export function createPlayer(session: SessionConnection) {
     window.addEventListener("pointermove", e => {
       if (resizingX === undefined) return;
       const playerRect = player.getBoundingClientRect();
-      const width = playerRect.right - e.clientX - resizer.getBoundingClientRect().width / 2;
+      const width = playerRect.right - e.clientX + resizer.getBoundingClientRect().width / 2;
       const widthPct = (width / playerRect.width) * 100;
       player.style.setProperty("--chat-width", `${widthPct.toFixed(2)}%`);
     });
