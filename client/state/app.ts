@@ -1,5 +1,6 @@
 import { LazySignal, Signal } from "@char/aftercare";
 import { connectToSession, SessionConnection } from "../state/connection.ts";
+import { PlaylistManagement } from "../ui/playlist-management.tsx";
 
 export interface UserInfo {
   nickname: string;
@@ -57,7 +58,14 @@ export const app = {
       s.set(window.location.hash.substring(1));
     });
   }),
+
+  management: new LazySignal<PlaylistManagement>(),
 };
+
+app.session.subscribe(session => {
+  app.management.get()?.elem?.remove();
+  app.management.set(new PlaylistManagement(session));
+});
 
 Object.defineProperty(globalThis, "app", { value: app });
 Object.defineProperty(globalThis, "session", { get: () => app.session.get() });

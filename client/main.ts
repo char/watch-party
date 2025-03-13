@@ -28,3 +28,7 @@ app.session.subscribeImmediate(conn => {
 
   main.append(player);
 });
+
+app.management.subscribeImmediate(mgmt => {
+  main.append(mgmt.elem);
+});

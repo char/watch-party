@@ -21,12 +21,15 @@
 
   --border-radius: 0.25em;
 
-  background-color: rgb(var(--color-bg) / 1);
-  color: rgb(var(--color-fg) / 1);
-
   tab-size: 4;
   overflow-wrap: break-word;
   cursor: default;
+}
+
+:root,
+dialog {
+  background-color: rgb(var(--color-bg) / 1);
+  color: rgb(var(--color-fg) / 1);
 }
 
 :root,

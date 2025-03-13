@@ -1,12 +1,12 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
+import { Peer } from "../common/peer.ts";
 import { ClientPacket, ClientPacketSchema, ServerPacket } from "../common/proto.ts";
 import { WatchSession } from "./session.ts";
 
 export interface SessionConnection {
   id: string;
   resumptionToken: string;
-  nickname: string;
-  displayColor: string; // css color
+  peer: Peer;
   sockets: Set<WebSocket>;
   lastKeepalive: number; // Date.now
 }
@@ -29,8 +29,8 @@ export function handleConnection(
     send({
       type: "Handshake",
       session: session.id,
-      nickname: connection.nickname,
-      displayColor: connection.displayColor,
+      nickname: connection.peer.nickname,
+      displayColor: connection.peer.displayColor,
       connectionId: connection.id,
       resumptionToken: connection.resumptionToken,
       playlist: session.playlist,
@@ -62,11 +62,7 @@ export function handleConnection(
       }
 
       case "RequestPeerList": {
-        const peers = session.connections.map(c => ({
-          connectionId: c.id,
-          displayColor: c.displayColor,
-          nickname: c.nickname,
-        }));
+        const peers = session.connections.map(c => c.peer);
         send({ type: "FullPeerList", peers });
         break;
       }
@@ -91,11 +87,7 @@ export function handleConnection(
 
       case "ChatMessage": {
         session.chatHistory.push({
-          from: {
-            connectionId: connection.id,
-            nickname: connection.nickname,
-            displayColor: connection.displayColor,
-          },
+          from: connection.peer,
           text: packet.text,
           facets: packet.facets,
           system: false,
@@ -110,11 +102,7 @@ export function handleConnection(
       }
 
       case "AppendToPlaylist": {
-        packet.item.fromPeer = {
-          connectionId: connection.id,
-          nickname: connection.nickname,
-          displayColor: connection.displayColor,
-        };
+        packet.item.fromPeer = connection.peer;
         session.playlist.push(packet.item);
         session.broadcast({
           type: "PlaylistUpdate",
@@ -130,6 +118,18 @@ export function handleConnection(
         if (index === -1) return;
         if (index <= session.playlistIndex) session.playlistIndex -= 1;
         session.playlist.splice(index, 1);
+        session.broadcast({
+          type: "PlaylistUpdate",
+          from: connection.id,
+          playlist: session.playlist,
+          playlistIndex: session.playlistIndex,
+        });
+
+        break;
+      }
+
+      case "ChangePlaylistIndex": {
+        session.playlistIndex = packet.playlistIndex;
         session.broadcast({
           type: "PlaylistUpdate",
           from: connection.id,

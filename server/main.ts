@@ -43,10 +43,14 @@ router.get("/api/session/:session/connect", ctx => {
     const displayColor = ctx.request.url.searchParams.get("color");
     if (!displayColor) throw new HTTPError(Status.BadRequest, "missing color");
 
+    const connectionId = randomBase32(8);
     connection = {
-      id: randomBase32(8),
-      nickname,
-      displayColor,
+      id: connectionId,
+      peer: {
+        connectionId,
+        nickname,
+        displayColor,
+      },
       lastKeepalive: Date.now(),
       resumptionToken: randomBase32(16),
       sockets: new Set(),

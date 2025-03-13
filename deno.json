@@ -11,7 +11,7 @@
   "imports": {
     "@atcute/cbor": "npm:@atcute/cbor@^2.1.3",
     "@badrap/valita": "./vendor/valita.ts",
-    "@char/aftercare": "jsr:@char/aftercare@^0.2.0",
+    "@char/aftercare": "jsr:@char/aftercare@^0.3.0",
     "@mary/base32": "jsr:@mary/base32@^0.1.0",
     "@oak/oak": "jsr:@oak/oak@^17.1.4",
     "@std/json": "jsr:@std/json@^1.0.1"

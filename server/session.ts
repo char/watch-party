@@ -87,17 +87,11 @@ export class WatchSession {
   addPeer(connection: SessionConnection) {
     this.connections.push(connection);
 
-    const peer = {
-      connectionId: connection.id,
-      nickname: connection.nickname,
-      displayColor: connection.displayColor,
-    };
-
     this.broadcast({
       type: "PeerAdded",
-      ...peer,
+      ...connection.peer,
     });
-    this.chatHistory.push({ from: peer, text: "joined", facets: [], system: true });
+    this.chatHistory.push({ from: connection.peer, text: "joined", facets: [], system: true });
   }
 
   dropPeer(
@@ -107,11 +101,7 @@ export class WatchSession {
     this.connections = this.connections.filter(it => it !== connection);
     this.broadcast({ type: "PeerDropped", connectionId: connection.id, reason });
     this.chatHistory.push({
-      from: {
-        connectionId: connection.id,
-        nickname: connection.nickname,
-        displayColor: connection.displayColor,
-      },
+      from: connection.peer,
       text: "left",
       facets: [],
       system: true,

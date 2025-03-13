@@ -8,11 +8,11 @@
   --alpha-text: 1;
 }
 
-main > form {
+main > form,
+dialog > form {
   display: flex;
   flex-direction: column;
 
-  padding: 1em;
   max-width: 60ch;
   margin: 0 auto;
 
@@ -37,6 +37,10 @@ main > form {
   label {
     margin-bottom: 0.25em;
   }
+}
+
+main > form {
+  padding: 1em;
 }
 
 main {
@@ -78,4 +82,12 @@ input[type="color"] {
   .group > input {
     flex: 1;
   }
+}
+
+dialog {
+  width: 100%;
+  max-width: 60ch;
+  z-index: 99;
+  border-radius: var(--border-radius);
+  border-color: rgb(var(--color-fg) / 0.25);
 }

@@ -10,6 +10,7 @@ import {
 } from "../state/connection.ts";
 import { PlayheadOverride } from "../state/video-state.ts";
 import { bindValue, formatTime, onEvent } from "../util.ts";
+import { createPlaylistAppendForm } from "./append-to-playlist.tsx";
 
 function ChatMessage(
   from: Peer,
@@ -132,6 +133,16 @@ export class ChatWindow {
           </article>,
         );
 
+        break;
+      }
+      case "playlist": {
+        const dialog = app.management.get()?.elem;
+        if (dialog) dialog.showModal();
+        break;
+      }
+      case "append": {
+        const appendDialog = createPlaylistAppendForm(this.session);
+        document.querySelector("main")!.append(appendDialog);
         break;
       }
       case "help": {
