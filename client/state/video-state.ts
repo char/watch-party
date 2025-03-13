@@ -1,7 +1,7 @@
 import { Signal } from "@char/aftercare";
+import { Peer } from "../../common/peer.ts";
 import { PlaylistItem } from "../../common/playlist.ts";
 import { BasicSignalHandler } from "../signals.ts";
-import { Peer } from "./connection.ts";
 
 export type Originator = "local" | "server" | Peer | undefined;
 
@@ -77,7 +77,11 @@ export class VideoState extends BasicSignalHandler {
 
   updateCurrentVideo() {
     const currentVideo = this.playlist.at(this.playlistIndex);
-    if (currentVideo && currentVideo !== this.currentVideo.get())
-      this.currentVideo.set(currentVideo);
+    if (!currentVideo) return;
+
+    // TODO: better deep equality check
+    const videosDiffer =
+      JSON.stringify(currentVideo) !== JSON.stringify(this.currentVideo.get());
+    if (videosDiffer) this.currentVideo.set(currentVideo);
   }
 }

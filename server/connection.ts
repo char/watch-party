@@ -108,6 +108,36 @@ export function handleConnection(
         session.broadcast({ ...packet, type: "ReportPlayhead", from: connection.id });
         break;
       }
+
+      case "AppendToPlaylist": {
+        packet.item.fromPeer = {
+          connectionId: connection.id,
+          nickname: connection.nickname,
+          displayColor: connection.displayColor,
+        };
+        session.playlist.push(packet.item);
+        session.broadcast({
+          type: "PlaylistUpdate",
+          from: connection.id,
+          playlist: session.playlist,
+          playlistIndex: session.playlistIndex,
+        });
+        break;
+      }
+
+      case "RemoveFromPlaylist": {
+        const index = session.playlist.findLastIndex(it => it.video === packet.url);
+        if (index === -1) return;
+        if (index <= session.playlistIndex) session.playlistIndex -= 1;
+        session.playlist.splice(index, 1);
+        session.broadcast({
+          type: "PlaylistUpdate",
+          from: connection.id,
+          playlist: session.playlist,
+          playlistIndex: session.playlistIndex,
+        });
+        break;
+      }
     }
   };
 

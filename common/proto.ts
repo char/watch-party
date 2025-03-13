@@ -68,6 +68,21 @@ const ServerReportPlayheadSchema = ReportPlayheadSchema.extend({
   from: ConnectionIdSchema,
 });
 
+const AppendToPlaylistSchema = v.object({
+  type: v.literal("AppendToPlaylist"),
+  item: PlaylistItemSchema,
+});
+const RemoveFromPlaylistSchema = v.object({
+  type: v.literal("RemoveFromPlaylist"),
+  url: v.string(),
+});
+const ServerPlaylistUpdateSchema = v.object({
+  type: v.literal("PlaylistUpdate"),
+  playlist: v.array(PlaylistItemSchema),
+  playlistIndex: v.number(),
+  from: ConnectionIdSchema.optional(),
+});
+
 const ChatFacetSchema = v.union(
   ...[
     v.object({ type: v.literal("link"), link: v.string() }),
@@ -110,6 +125,8 @@ export const ClientPacketSchema = v.union(
   ChangePlayheadSchema,
   RequestPlayheadSyncSchema,
   ReportPlayheadSchema,
+  AppendToPlaylistSchema,
+  RemoveFromPlaylistSchema,
 );
 
 export const ServerPacketSchema = v.union(
@@ -121,6 +138,7 @@ export const ServerPacketSchema = v.union(
   ServerChangePlayheadSchema,
   ChatHistorySchema,
   ServerReportPlayheadSchema,
+  ServerPlaylistUpdateSchema,
 );
 
 type MaybeSpecific<Packet, Type extends string | undefined> = Packet &

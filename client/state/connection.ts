@@ -72,6 +72,7 @@ export class SessionConnection extends BasicSignalHandler {
     this.#handlePeerListChanges();
     this.#handlePlayheadChanges();
     this.#handlePlayheadReports();
+    this.#handlePlaylistUpdates();
   }
   send(packet: ClientPacket) {
     this.socket.send(encodeCbor(packet));
@@ -141,6 +142,19 @@ export class SessionConnection extends BasicSignalHandler {
       const peer = this.peers.get(packet.from);
       if (!peer) return;
       peer.playhead.set({ time: packet.playhead, paused: packet.paused });
+    });
+  }
+
+  #handlePlaylistUpdates() {
+    this.on(ReceivedPacket, ({ packet }) => {
+      if (packet.type !== "PlaylistUpdate") return;
+      // TODO: packet.from ?
+      this.video.fire(
+        PlaylistChange,
+        packet.from?.pipe(it => this.peers.get(it)) ?? "server",
+        packet.playlist,
+        packet.playlistIndex,
+      );
     });
   }
 }
