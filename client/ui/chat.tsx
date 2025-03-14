@@ -8,7 +8,7 @@ import {
   ReceivedPacket,
   SessionConnection,
 } from "../state/connection.ts";
-import { PlayheadOverride } from "../state/video-state.ts";
+import { PlayheadOverride, PlaylistChange } from "../state/video-state.ts";
 import { bindValue, formatTime, onEvent } from "../util.ts";
 import { createPlaylistAppendForm } from "./append-to-playlist.tsx";
 
@@ -58,6 +58,12 @@ export class ChatWindow {
     this.#handleJoinLeave();
     this.#handlePlayheadOverride();
     this.#handleChatHistory();
+
+    // todo: extract to handle func
+    this.session.video.on(PlaylistChange, ev => {
+      if (!ev.originator || ev.originator === "local" || ev.originator === "server") return;
+      this.append(ChatMessage(ev.originator, "updated the playlist", [], true));
+    });
   }
 
   append(message: Element) {

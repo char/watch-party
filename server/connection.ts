@@ -1,7 +1,9 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { Peer } from "../common/peer.ts";
-import { ClientPacket, ClientPacketSchema, ServerPacket } from "../common/proto.ts";
+import { ClientPacketSchema, ServerPacket } from "../common/proto.ts";
 import { WatchSession } from "./session.ts";
+// @ts-types="@char/aftercare"
+import { safely } from "@char/aftercare";
 
 export interface SessionConnection {
   id: string;
@@ -46,9 +48,10 @@ export function handleConnection(
     });
   };
   const onMessage = (frame: Uint8Array) => {
-    const packet: ClientPacket | undefined = frame
-      .pipe(decodeCbor)
-      ?.pipe((data: unknown) => ClientPacketSchema.parse(data));
+    const packet = frame
+      .pipe(it => safely(decodeCbor)(it)[0] as object)
+      ?.pipe(safely((data: unknown) => ClientPacketSchema.parse(data)))
+      ?.pipe(res => res[0]);
     if (!packet) return;
 
     connection.lastKeepalive = Date.now();
@@ -114,10 +117,9 @@ export function handleConnection(
       }
 
       case "RemoveFromPlaylist": {
-        const index = session.playlist.findLastIndex(it => it.video === packet.url);
-        if (index === -1) return;
-        if (index <= session.playlistIndex) session.playlistIndex -= 1;
-        session.playlist.splice(index, 1);
+        const item = session.playlist.at(packet.playlistIndex);
+        if (!item || item.video !== packet.url) return;
+        session.playlist.splice(packet.playlistIndex, 1);
         session.broadcast({
           type: "PlaylistUpdate",
           from: connection.id,
@@ -136,6 +138,21 @@ export function handleConnection(
           playlist: session.playlist,
           playlistIndex: session.playlistIndex,
         });
+        break;
+      }
+
+      case "EditPlaylistItem": {
+        const item = session.playlist.at(packet.playlistIndex);
+        if (!item || item.video !== packet.item.video) return;
+        item.mirrors = packet.item.mirrors;
+        item.subtitles = packet.item.subtitles;
+        session.broadcast({
+          type: "PlaylistUpdate",
+          from: connection.id,
+          playlist: session.playlist,
+          playlistIndex: session.playlistIndex,
+        });
+
         break;
       }
     }

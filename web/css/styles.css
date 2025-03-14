@@ -8,13 +8,9 @@
   --alpha-text: 1;
 }
 
-main > form,
-dialog > form {
+form {
   display: flex;
   flex-direction: column;
-
-  max-width: 60ch;
-  margin: 0 auto;
 
   input,
   button,
@@ -40,6 +36,8 @@ dialog > form {
 }
 
 main > form {
+  max-width: 60ch;
+  margin: 0 auto;
   padding: 1em;
 }
 
@@ -86,7 +84,7 @@ input[type="color"] {
 
 dialog {
   width: 100%;
-  max-width: 60ch;
+  max-width: 96ch;
   z-index: 99;
   border-radius: var(--border-radius);
   border-color: rgb(var(--color-fg) / 0.25);

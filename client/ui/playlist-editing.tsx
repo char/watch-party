@@ -1,4 +1,5 @@
 import { Signal } from "@char/aftercare";
+import { PlaylistItem } from "../../common/playlist.ts";
 import { bindValue, onEvent } from "../util.ts";
 
 export class MirrorsContainer {
@@ -41,6 +42,12 @@ export class MirrorsContainer {
     this.mirrors.push(mirror);
     this.elem.append(group);
     this.elem.append(this.addButton);
+
+    return mirror;
+  }
+
+  reify(): PlaylistItem["mirrors"] {
+    return this.mirrors.map(it => it.get());
   }
 }
 
@@ -85,5 +92,14 @@ export class SubtitlesContainer {
     this.subtitles.push(subtitle);
     this.elem.append(group);
     this.elem.append(this.addButton); // place the add button at the bottom
+
+    return subtitle;
+  }
+
+  reify(): PlaylistItem["subtitles"] {
+    return this.subtitles.map(it => ({
+      name: it.name.get() || "English",
+      url: it.url.get(),
+    }));
   }
 }

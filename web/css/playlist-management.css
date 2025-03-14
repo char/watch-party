@@ -1,0 +1,40 @@
+.playlist-management {
+  summary h2 {
+    display: inline;
+  }
+
+  summary {
+    margin: 0;
+  }
+}
+
+.playlist-item {
+  border: 1px solid rgb(var(--color-fg) / 0.25);
+  border-radius: var(--border-radius);
+  margin-bottom: 1em;
+  padding: 1em;
+
+  &.active {
+    border-color: rgb(var(--color-fg) / 0.25);
+  }
+
+  h2 {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+  .edit {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+    margin: 0;
+    margin-top: 1em;
+  }
+}

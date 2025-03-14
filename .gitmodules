@@ -1,0 +1,3 @@
+[submodule "vendor/aftercare"]
+	path = vendor/aftercare
+	url = https://github.com/char/aftercare.git

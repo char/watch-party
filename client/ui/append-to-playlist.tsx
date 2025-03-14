@@ -14,11 +14,8 @@ export function createPlaylistAppendForm(session: SessionConnection) {
       type: "AppendToPlaylist",
       item: {
         video: video.get(),
-        mirrors: mirrors.mirrors.map(it => it.get()),
-        subtitles: subtitles.subtitles.map(it => ({
-          name: it.name.get() || "English",
-          url: it.url.get(),
-        })),
+        mirrors: mirrors.reify(),
+        subtitles: subtitles.reify(),
       },
     });
   };

@@ -75,10 +75,16 @@ const AppendToPlaylistSchema = v.object({
 const RemoveFromPlaylistSchema = v.object({
   type: v.literal("RemoveFromPlaylist"),
   url: v.string(),
+  playlistIndex: v.number(),
 });
 const ChangePlaylistIndexSchema = v.object({
   type: v.literal("ChangePlaylistIndex"),
   playlistIndex: v.number(),
+});
+const EditPlaylistItemSchema = v.object({
+  type: v.literal("EditPlaylistItem"),
+  playlistIndex: v.number(),
+  item: PlaylistItemSchema,
 });
 const ServerPlaylistUpdateSchema = v.object({
   type: v.literal("PlaylistUpdate"),
@@ -132,6 +138,7 @@ export const ClientPacketSchema = v.union(
   AppendToPlaylistSchema,
   RemoveFromPlaylistSchema,
   ChangePlaylistIndexSchema,
+  EditPlaylistItemSchema,
 );
 
 export const ServerPacketSchema = v.union(
