@@ -59,6 +59,7 @@ export function createPlayer(session: SessionConnection) {
         ?.pipe(Number)
         .pipe(it => (Number.isFinite(it) ? it : undefined)) ?? 0.8;
     videoElement = video;
+    videoContainer.append(video);
     video.currentTime = session.video.playhead / 1000;
     if (!session.video.paused) void video.play();
 
@@ -66,7 +67,10 @@ export function createPlayer(session: SessionConnection) {
       if (event.originator === "local") return;
       video!.currentTime = session.video.playhead / 1000;
       if (event.paused) video.pause();
-      else video.play();
+      else {
+        if (video.parentNode == null) return;
+        video.play();
+      }
     });
 
     let overrideDebounce: number | undefined = undefined;
@@ -103,8 +107,6 @@ export function createPlayer(session: SessionConnection) {
     video.addEventListener("volumechange", () => {
       localStorage.setItem("watch-party/last-volume", String(video.volume));
     });
-
-    videoContainer.append(video);
   };
 
   session.video.currentVideo.subscribeImmediate(videoItem => {
