@@ -53,6 +53,7 @@ export class PlaylistManagement {
   }
   renderItem(item: PlaylistItem, idx: number, active: boolean): Element {
     const skipTo = () => {
+      this.session.send({ type: "ChangePlayhead", paused: true, playhead: 0 });
       this.session.send({ type: "ChangePlaylistIndex", playlistIndex: idx });
     };
     const remove = () => {
