@@ -1,6 +1,6 @@
 import { PlaylistItem } from "../../common/playlist.ts";
 import { SessionConnection } from "../state/connection.ts";
-import { PlaylistChange } from "../state/video-state.ts";
+import { PlayheadOverride, PlaylistChange } from "../state/video-state.ts";
 import { createPlaylistAppendForm } from "./append-to-playlist.tsx";
 import { MirrorsContainer, SubtitlesContainer } from "./playlist-editing.tsx";
 
@@ -53,7 +53,7 @@ export class PlaylistManagement {
   }
   renderItem(item: PlaylistItem, idx: number, active: boolean): Element {
     const skipTo = () => {
-      this.session.send({ type: "ChangePlayhead", paused: true, playhead: 0 });
+      this.session.video.fire(PlayheadOverride, "local", Date.now(), 0, true, true);
       this.session.send({ type: "ChangePlaylistIndex", playlistIndex: idx });
     };
     const remove = () => {

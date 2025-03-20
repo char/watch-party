@@ -64,7 +64,7 @@ export function createPlayer(session: SessionConnection) {
     if (!session.video.paused) void video.play();
 
     session.video.on(PlayheadOverride, event => {
-      if (event.originator === "local") return;
+      if (event.originator === "local" && !event.forceHandleLocal) return;
       video!.currentTime = session.video.playhead / 1000;
       if (event.paused) video.pause();
       else {

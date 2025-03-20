@@ -26,6 +26,7 @@ export class PlayheadOverride {
     public timestamp: number,
     public playhead: number,
     public paused: boolean,
+    public forceHandleLocal: boolean = false,
   ) {}
 }
 
