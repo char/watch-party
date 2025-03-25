@@ -68,7 +68,7 @@ export function createPlayer(session: SessionConnection) {
       video!.currentTime = session.video.playhead / 1000;
       if (event.paused) video.pause();
       else {
-        if (video.parentNode == null) return;
+        if (video.parentElement == null) return;
         video.play();
       }
     });
