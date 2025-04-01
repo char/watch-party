@@ -15,18 +15,22 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
     <form
       _tap={onEvent("submit", async ev => {
         ev.preventDefault();
+        const playlist: PlaylistItem[] = [
+          {
+            video: video.get(),
+            mirrors: mirrors.mirrors.map(it => it.get()),
+            subtitles: subtitles.subtitles.map(it => ({
+              name: it.name.get() || "English",
+              url: it.url.get(),
+            })),
+          },
+        ];
         const response = await fetch("/api/session", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: id.get() || undefined,
-            playlist: [
-              {
-                video: video.get(),
-                mirrors: mirrors.reify(),
-                subtitles: subtitles.reify(),
-              },
-            ] satisfies PlaylistItem[],
+            playlist,
           }),
         });
         const info = v

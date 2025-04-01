@@ -38,21 +38,29 @@ export function createPlayer(session: SessionConnection) {
   const noCurrentVideo = (
     <div className="video-status">There is no video currently playing.</div>
   );
-  let videoElement: HTMLVideoElement | undefined = undefined;
-  const showVideo = (url: string, subtitles: PlaylistItem["subtitles"]) => {
+  let videoElement: HTMLMediaElement | undefined = undefined;
+  const showVideo = ({ video: url, subtitles, isAudio }: PlaylistItem) => {
     noCurrentVideo.remove();
     if (videoElement !== undefined) videoElement.remove();
 
-    const video = (
-      <video crossOrigin="anonymous" controls>
-        <source src={url} />
-        {...subtitles
-          .map(s => (<track kind="captions" label={s.name} src={s.url} />) as HTMLTrackElement)
-          .tap(list => {
-            if (list[0]) list[0].default = true;
-          })}
-      </video>
-    ) as HTMLVideoElement;
+    const video = isAudio
+      ? ((
+          <audio crossOrigin="anonymous" controls>
+            <source src={url} />
+          </audio>
+        ) as HTMLMediaElement)
+      : ((
+          <video crossOrigin="anonymous" controls>
+            <source src={url} />
+            {...subtitles
+              .map(
+                s => (<track kind="captions" label={s.name} src={s.url} />) as HTMLTrackElement,
+              )
+              .tap(list => {
+                if (list[0]) list[0].default = true;
+              })}
+          </video>
+        ) as HTMLMediaElement);
     video.volume =
       localStorage
         .getItem("watch-party/last-volume")
@@ -128,7 +136,7 @@ export function createPlayer(session: SessionConnection) {
             type="button"
             _tap={onEvent("click", () => {
               picker.remove();
-              showVideo(videoItem.video, videoItem.subtitles);
+              showVideo(videoItem);
             })}
           >
             {videoItem.video}
@@ -139,7 +147,7 @@ export function createPlayer(session: SessionConnection) {
               type="button"
               _tap={onEvent("click", () => {
                 picker.remove();
-                showVideo(mirror, videoItem.subtitles);
+                showVideo({ ...videoItem, video: mirror });
               })}
             >
               {mirror}
@@ -149,7 +157,7 @@ export function createPlayer(session: SessionConnection) {
       );
       videoContainer.append(picker);
     } else {
-      showVideo(videoItem.video, videoItem.subtitles);
+      showVideo(videoItem);
     }
   });
 

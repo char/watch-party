@@ -6,6 +6,7 @@ export interface PlaylistItem {
   mirrors: string[];
   subtitles: { name: string; url: string }[];
   fromPeer?: Peer; // connection id
+  isAudio?: boolean;
 }
 
 export const PlaylistItemSchema = v.object({
@@ -13,4 +14,5 @@ export const PlaylistItemSchema = v.object({
   mirrors: v.array(v.string()).default([]),
   subtitles: v.array(v.object({ name: v.string(), url: v.string() })).default([]),
   fromPeer: PeerSchema.optional(),
+  isAudio: v.boolean().optional(() => false),
 });

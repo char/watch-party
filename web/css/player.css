@@ -18,6 +18,11 @@
       object-fit: contain;
     }
 
+    audio {
+      display: block;
+      width: 100%;
+    }
+
     &:has(.video-status) {
       display: flex;
       justify-content: center;
