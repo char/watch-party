@@ -16,7 +16,8 @@
     "@char/aftercare/jsx-runtime": "./vendor/aftercare/src/jsx.ts",
     "@mary/base32": "jsr:@mary/base32@^0.1.0",
     "@oak/oak": "jsr:@oak/oak@^17.1.4",
-    "@std/json": "jsr:@std/json@^1.0.1"
+    "@std/json": "jsr:@std/json@^1.0.1",
+    "zod": "npm:zod@^4.0.0-beta.20250412T085909"
   },
   "compilerOptions": {
     "lib": ["deno.window", "deno.unstable", "dom"],

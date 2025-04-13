@@ -7,7 +7,6 @@ powered by [aftercare](https://github.com/char/aftercare) and [oak](https://jsr.
 ## setup
 
 ```shell
-$ deno run -A ./_patch-valita.ts # grab patched valita from JSR
 $ deno task start # builds the client and runs the server
 Listening on: http://…
 $ deno task dev # watches the client and runs the server in watch mode

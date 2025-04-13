@@ -1,13 +1,13 @@
 import "https://char.lt/esm/pipe.ts";
 
 import { Application, HttpError, Router, Status } from "@oak/oak";
+import z from "zod";
+
+import { PlaylistItemSchema } from "../common/playlist.ts";
 import { handleConnection, SessionConnection } from "./connection.ts";
 import { WatchSession } from "./session.ts";
 import { apiHandler } from "./util/api.ts";
 import { randomBase32 } from "./util/base32.ts";
-
-import * as v from "@badrap/valita";
-import { PlaylistItemSchema } from "../common/playlist.ts";
 
 const router = new Router();
 
@@ -66,9 +66,9 @@ router.put(
   "/api/session",
   apiHandler(
     {
-      body: v.object({
-        id: v.string().optional(),
-        playlist: v.array(PlaylistItemSchema).optional(),
+      body: z.object({
+        id: z.string().optional(),
+        playlist: PlaylistItemSchema.array().optional(),
       }),
     },
     (_ctx, { body }) => {

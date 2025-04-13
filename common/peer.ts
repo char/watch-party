@@ -1,4 +1,4 @@
-import * as v from "@badrap/valita";
+import * as z from "zod";
 
 export interface Peer {
   connectionId: string;
@@ -6,8 +6,8 @@ export interface Peer {
   displayColor: string;
 }
 
-export const PeerSchema = v.object({
-  connectionId: v.string(),
-  nickname: v.string(),
-  displayColor: v.string(),
+export const PeerSchema = z.object({
+  connectionId: z.string(),
+  nickname: z.string(),
+  displayColor: z.string(),
 });

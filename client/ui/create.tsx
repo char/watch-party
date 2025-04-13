@@ -1,5 +1,6 @@
-import * as v from "@badrap/valita";
 import { Signal } from "@char/aftercare";
+import * as z from "zod";
+
 import { PlaylistItem } from "../../common/playlist.ts";
 import { bindValue, onEvent } from "../util.ts";
 import { MirrorsContainer, SubtitlesContainer } from "./playlist-editing.tsx";
@@ -33,9 +34,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
             playlist,
           }),
         });
-        const info = v
-          .object({ id: v.string() })
-          .parse(await response.json(), { mode: "passthrough" });
+        const info = z.object({ id: z.string() }).parse(await response.json());
         createCallback(info.id);
       })}
       id="create-form"

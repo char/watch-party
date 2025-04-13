@@ -24,7 +24,8 @@
     "npm:@atcute/cbor@^2.1.3": "2.1.3",
     "npm:@types/node@*": "22.5.4",
     "npm:esbuild@0.24": "0.24.2",
-    "npm:path-to-regexp@^6.3.0": "6.3.0"
+    "npm:path-to-regexp@^6.3.0": "6.3.0",
+    "npm:zod@^4.0.0-beta.20250412T085909": "4.0.0-beta.20250412T085909"
   },
   "jsr": {
     "@luca/esbuild-deno-loader@0.11.1": {
@@ -211,6 +212,12 @@
         "undici-types"
       ]
     },
+    "@zod/core@0.1.0": {
+      "integrity": "sha512-hSXsufqjH7u8DiJPT0KY1rFWIhjkdXGM8MhMLwzaeOMhxMA4bzjWLQwSoAToJunUTVrpmfdo4dUFzNaU219+VQ=="
+    },
+    "@zod/core@0.4.6": {
+      "integrity": "sha512-0IeEldTobOdkoJPyINVQgOHlgCWbpozSsDjdcd2+VcxKvf8T+SYLDVk7NKt0XJx3C0ImNXAXh3V3yIw46NJyQA=="
+    },
     "esbuild@0.24.2": {
       "integrity": "sha512-+9egpBW8I3CD5XPe0n6BfT5fxLzxrlDzqydF3aviG+9ni1lDC/OvMHcxqEFV0+LANZG5R1bFMWfUrjVsdwxJvA==",
       "dependencies": [
@@ -246,6 +253,12 @@
     },
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
+    },
+    "zod@4.0.0-beta.20250412T085909": {
+      "integrity": "sha512-W4OjoCnF5XTuljw4X6Hh3Inp45Ug7mmCWzWfFPv+RZcSIAGz7OPqBKOEDtLjfnJAvoxvY3vO0SkxH1zr0Md/Ag==",
+      "dependencies": [
+        "@zod/core@0.4.6"
+      ]
     }
   },
   "remote": {
@@ -256,7 +269,8 @@
       "jsr:@mary/base32@0.1",
       "jsr:@oak/oak@^17.1.4",
       "jsr:@std/json@^1.0.1",
-      "npm:@atcute/cbor@^2.1.3"
+      "npm:@atcute/cbor@^2.1.3",
+      "npm:zod@^4.0.0-beta.20250412T085909"
     ]
   }
 }

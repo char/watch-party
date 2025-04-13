@@ -1,4 +1,4 @@
-import * as v from "@badrap/valita";
+import * as z from "zod";
 import { Peer, PeerSchema } from "./peer.ts";
 
 export interface PlaylistItem {
@@ -9,10 +9,10 @@ export interface PlaylistItem {
   isAudio?: boolean;
 }
 
-export const PlaylistItemSchema = v.object({
-  video: v.string(),
-  mirrors: v.array(v.string()).default([]),
-  subtitles: v.array(v.object({ name: v.string(), url: v.string() })).default([]),
+export const PlaylistItemSchema = z.object({
+  video: z.string(),
+  mirrors: z.array(z.string()),
+  subtitles: z.array(z.object({ name: z.string(), url: z.string() })),
   fromPeer: PeerSchema.optional(),
-  isAudio: v.boolean().optional(() => false),
+  isAudio: z.boolean().default(false),
 });

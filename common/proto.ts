@@ -1,134 +1,135 @@
-import * as v from "@badrap/valita";
+import * as z from "zod";
 import { PlaylistItemSchema } from "./playlist.ts";
 
-const ConnectionIdSchema = v.string();
+const ConnectionIdSchema = z.string();
 
-const HandshakeSchema = v.object({
-  type: v.literal("Handshake"),
-  nickname: v.string(),
-  displayColor: v.string(),
+const HandshakeSchema = z.object({
+  type: z.literal("Handshake"),
+  nickname: z.string(),
+  displayColor: z.string(),
 
-  connectionId: v.string(),
-  resumptionToken: v.string(),
+  connectionId: z.string(),
+  resumptionToken: z.string(),
 
-  session: v.string(),
-  playlist: PlaylistItemSchema.pipe(v.array),
-  playlistIndex: v.number(),
-  paused: v.boolean(),
-  playhead: v.number(),
-  playheadTimestamp: v.number(),
+  session: z.string(),
+  playlist: PlaylistItemSchema.array(),
+  playlistIndex: z.number(),
+  paused: z.boolean(),
+  playhead: z.number(),
+  playheadTimestamp: z.number(),
 });
 
-const PeerAddedSchema = v.object({
-  type: v.literal("PeerAdded"),
+const PeerAddedSchema = z.object({
+  type: z.literal("PeerAdded"),
   connectionId: ConnectionIdSchema,
-  nickname: v.string(),
-  displayColor: v.string(),
+  nickname: z.string(),
+  displayColor: z.string(),
 });
 
-const PeerDroppedSchema = v.object({
-  type: v.literal("PeerDropped"),
+const PeerDroppedSchema = z.object({
+  type: z.literal("PeerDropped"),
   connectionId: ConnectionIdSchema,
-  reason: v.union(v.literal("disconnect"), v.literal("timeout")),
+  reason: z.union([z.literal("disconnect"), z.literal("timeout")]),
 });
 
-const RequestPeerListSchema = v.object({
-  type: v.literal("RequestPeerList"),
+const RequestPeerListSchema = z.object({
+  type: z.literal("RequestPeerList"),
 });
-const FullUserListSchema = v.object({
-  type: v.literal("FullPeerList"),
-  peers: v
-    .object({ connectionId: v.string(), nickname: v.string(), displayColor: v.string() })
-    .pipe(v.array),
-});
-
-const LeaveSessionSchema = v.object({
-  type: v.literal("LeaveSession"),
+const FullUserListSchema = z.object({
+  type: z.literal("FullPeerList"),
+  peers: z
+    .object({ connectionId: z.string(), nickname: z.string(), displayColor: z.string() })
+    .array(),
 });
 
-const ChangePlayheadSchema = v.object({
-  type: v.literal("ChangePlayhead"),
-  playhead: v.number(),
-  paused: v.boolean(),
-});
-const ServerChangePlayheadSchema = ChangePlayheadSchema.extend({
-  from: ConnectionIdSchema.optional(),
+const LeaveSessionSchema = z.object({
+  type: z.literal("LeaveSession"),
 });
 
-const RequestPlayheadSyncSchema = v.object({
-  type: v.literal("RequestPlayheadSync"),
+const ChangePlayheadSchema = z.object({
+  type: z.literal("ChangePlayhead"),
+  playhead: z.number(),
+  paused: z.boolean(),
+});
+const ServerChangePlayheadSchema = z.extend(ChangePlayheadSchema, {
+  from: z.optional(ConnectionIdSchema),
 });
 
-const ReportPlayheadSchema = v.object({
-  type: v.literal("ReportPlayhead"),
-  playhead: v.number(),
-  paused: v.boolean(),
+const RequestPlayheadSyncSchema = z.object({
+  type: z.literal("RequestPlayheadSync"),
 });
-const ServerReportPlayheadSchema = ReportPlayheadSchema.extend({
+
+const ReportPlayheadSchema = z.object({
+  type: z.literal("ReportPlayhead"),
+  playhead: z.number(),
+  paused: z.boolean(),
+});
+const ServerReportPlayheadSchema = z.extend(ReportPlayheadSchema, {
   from: ConnectionIdSchema,
 });
 
-const AppendToPlaylistSchema = v.object({
-  type: v.literal("AppendToPlaylist"),
+const AppendToPlaylistSchema = z.object({
+  type: z.literal("AppendToPlaylist"),
   item: PlaylistItemSchema,
 });
-const RemoveFromPlaylistSchema = v.object({
-  type: v.literal("RemoveFromPlaylist"),
-  url: v.string(),
-  playlistIndex: v.number(),
+const RemoveFromPlaylistSchema = z.object({
+  type: z.literal("RemoveFromPlaylist"),
+  url: z.string(),
+  playlistIndex: z.number(),
 });
-const ChangePlaylistIndexSchema = v.object({
-  type: v.literal("ChangePlaylistIndex"),
-  playlistIndex: v.number(),
+const ChangePlaylistIndexSchema = z.object({
+  type: z.literal("ChangePlaylistIndex"),
+  playlistIndex: z.number(),
 });
-const EditPlaylistItemSchema = v.object({
-  type: v.literal("EditPlaylistItem"),
-  playlistIndex: v.number(),
+const EditPlaylistItemSchema = z.object({
+  type: z.literal("EditPlaylistItem"),
+  playlistIndex: z.number(),
   item: PlaylistItemSchema,
 });
-const ServerPlaylistUpdateSchema = v.object({
-  type: v.literal("PlaylistUpdate"),
-  playlist: v.array(PlaylistItemSchema),
-  playlistIndex: v.number(),
-  from: ConnectionIdSchema.optional(),
+const ServerPlaylistUpdateSchema = z.object({
+  type: z.literal("PlaylistUpdate"),
+  playlist: z.array(PlaylistItemSchema),
+  playlistIndex: z.number(),
+  from: z.optional(ConnectionIdSchema),
 });
 
-const ChatFacetSchema = v.union(
-  ...[
-    v.object({ type: v.literal("link"), link: v.string() }),
-    v.object({ type: v.literal("strong") }),
-    v.object({ type: v.literal("emphasis") }),
-    v.object({ type: v.literal("custom-emoji"), id: v.string() }),
-    v.object({ type: v.literal("color"), color: v.string() }),
-  ].map(it => it.extend({ start: v.number(), end: v.number() })), // utf-16 code units
+const ChatFacetSchema = z.union(
+  [
+    z.object({ type: z.literal("link"), link: z.string() }),
+    z.object({ type: z.literal("strong") }),
+    z.object({ type: z.literal("emphasis") }),
+    z.object({ type: z.literal("custom-emoji"), id: z.string() }),
+    z.object({ type: z.literal("color"), color: z.string() }),
+  ].map(it => z.extend(it, { start: z.number(), end: z.number() })), // utf-16 code units
 );
-export type ChatFacet = v.Infer<typeof ChatFacetSchema>;
+export type ChatFacet = z.infer<typeof ChatFacetSchema>;
 
-const ChatMessageSchema = v.object({
-  type: v.literal("ChatMessage"),
-  text: v.string(),
-  facets: ChatFacetSchema.pipe(v.array),
+const ChatMessageSchema = z.object({
+  type: z.literal("ChatMessage"),
+  text: z.string(),
+  facets: ChatFacetSchema.array(),
 });
 
-const ServerChatMessageSchema = ChatMessageSchema.extend({ from: ConnectionIdSchema });
+const ServerChatMessageSchema = z.extend(ChatMessageSchema, { from: ConnectionIdSchema });
+type asdf = z.infer<typeof ServerChatMessageSchema>;
 
-const ChatHistorySchema = v.object({
-  type: v.literal("ChatHistory"),
-  messages: v
+const ChatHistorySchema = z.object({
+  type: z.literal("ChatHistory"),
+  messages: z
     .object({
-      from: v.object({
-        connectionId: v.string(),
-        nickname: v.string(),
-        displayColor: v.string(),
+      from: z.object({
+        connectionId: z.string(),
+        nickname: z.string(),
+        displayColor: z.string(),
       }),
-      text: v.string(),
-      facets: ChatFacetSchema.pipe(v.array),
-      system: v.boolean(),
+      text: z.string(),
+      facets: ChatFacetSchema.array(),
+      system: z.boolean(),
     })
-    .pipe(v.array),
+    .array(),
 });
 
-export const ClientPacketSchema = v.union(
+export const ClientPacketSchema = z.union([
   LeaveSessionSchema,
   ChatMessageSchema,
   RequestPeerListSchema,
@@ -139,9 +140,9 @@ export const ClientPacketSchema = v.union(
   RemoveFromPlaylistSchema,
   ChangePlaylistIndexSchema,
   EditPlaylistItemSchema,
-);
+]);
 
-export const ServerPacketSchema = v.union(
+export const ServerPacketSchema = z.union([
   HandshakeSchema,
   PeerAddedSchema,
   PeerDroppedSchema,
@@ -151,14 +152,14 @@ export const ServerPacketSchema = v.union(
   ChatHistorySchema,
   ServerReportPlayheadSchema,
   ServerPlaylistUpdateSchema,
-);
+]);
 
 type MaybeSpecific<Packet, Type extends string | undefined> = Packet &
   (Type extends undefined ? object : { type: Type });
 
-type AnyClientPacket = v.Infer<typeof ClientPacketSchema>;
+type AnyClientPacket = z.input<typeof ClientPacketSchema>;
 export type ClientPacket<T extends AnyClientPacket["type"] | undefined = undefined> =
   MaybeSpecific<AnyClientPacket, T>;
-type AnyServerPacket = v.Infer<typeof ServerPacketSchema>;
+type AnyServerPacket = z.input<typeof ServerPacketSchema>;
 export type ServerPacket<T extends AnyServerPacket["type"] | undefined = undefined> =
   MaybeSpecific<AnyServerPacket, T>;

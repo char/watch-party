@@ -1,5 +1,5 @@
-import * as v from "@badrap/valita";
 import { Context as OakContext, Status } from "@oak/oak";
+import * as z from "zod";
 
 export type APIResponseType = unknown & object;
 
@@ -14,23 +14,23 @@ export class APIError extends Error {
 }
 
 interface TypedJsonHandlerOptions<
-  QuerySchema extends v.AbstractType | undefined = undefined,
-  BodySchema extends v.AbstractType | undefined = undefined,
+  QuerySchema extends z.ZodType | undefined = undefined,
+  BodySchema extends z.ZodType | undefined = undefined,
 > {
   query?: QuerySchema;
   body?: BodySchema;
 }
 interface TypedJsonHandlerInput<
-  QuerySchema extends v.AbstractType | undefined = undefined,
-  BodySchema extends v.AbstractType | undefined = undefined,
+  QuerySchema extends z.ZodType | undefined = undefined,
+  BodySchema extends z.ZodType | undefined = undefined,
 > {
-  query: QuerySchema extends v.AbstractType<infer Output> ? Output : undefined;
-  body: BodySchema extends v.AbstractType<infer Output> ? Output : undefined;
+  query: z.infer<NonNullable<QuerySchema>>;
+  body: z.infer<NonNullable<BodySchema>>;
 }
 type TypedJsonHandlerCallback<
   Context,
-  QuerySchema extends v.AbstractType | undefined = undefined,
-  BodySchema extends v.AbstractType | undefined = undefined,
+  QuerySchema extends z.ZodType | undefined = undefined,
+  BodySchema extends z.ZodType | undefined = undefined,
 > = (
   ctx: Context,
   input: TypedJsonHandlerInput<QuerySchema, BodySchema>,
@@ -38,8 +38,8 @@ type TypedJsonHandlerCallback<
 
 export function apiHandler<
   Context extends OakContext,
-  QuerySchema extends v.AbstractType | undefined = undefined,
-  BodySchema extends v.AbstractType | undefined = undefined,
+  QuerySchema extends z.ZodType | undefined = undefined,
+  BodySchema extends z.ZodType | undefined = undefined,
 >(
   opts: TypedJsonHandlerOptions<QuerySchema, BodySchema>,
   callback: TypedJsonHandlerCallback<Context, QuerySchema, BodySchema>,
@@ -51,9 +51,10 @@ export function apiHandler<
       if (opts.query) {
         try {
           const query = ctx.request.url.searchParams.entries().pipe(Object.fromEntries);
-          input.query = (opts.query as QuerySchema & v.Type).parse(query);
+          const result = opts.query.parse(query);
+          input.query = result;
         } catch (err) {
-          if (err instanceof v.ValitaError) {
+          if (err instanceof z.ZodError) {
             throw new APIError(
               Status.BadRequest,
               `error parsing query parameters: ${err.message}`,
@@ -75,9 +76,9 @@ export function apiHandler<
             .catch(() =>
               Promise.reject(new APIError(Status.BadRequest, "body was not JSON-encoded")),
             );
-          input.body = (opts.body as BodySchema & v.Type).parse(body);
+          input.body = opts.body.parse(body);
         } catch (err) {
-          if (err instanceof v.ValitaError) {
+          if (err instanceof z.ZodError) {
             throw new APIError(
               Status.BadRequest,
               `error parsing request body: ${err.message}`,
