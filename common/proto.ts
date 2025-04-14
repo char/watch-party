@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "@zod/mini";
 import { PlaylistItemSchema } from "./playlist.ts";
 
 const ConnectionIdSchema = z.string();
@@ -12,7 +12,7 @@ const HandshakeSchema = z.object({
   resumptionToken: z.string(),
 
   session: z.string(),
-  playlist: PlaylistItemSchema.array(),
+  playlist: PlaylistItemSchema.pipe(z.array),
   playlistIndex: z.number(),
   paused: z.boolean(),
   playhead: z.number(),
@@ -39,7 +39,7 @@ const FullUserListSchema = z.object({
   type: z.literal("FullPeerList"),
   peers: z
     .object({ connectionId: z.string(), nickname: z.string(), displayColor: z.string() })
-    .array(),
+    .pipe(z.array),
 });
 
 const LeaveSessionSchema = z.object({
@@ -93,21 +93,23 @@ const ServerPlaylistUpdateSchema = z.object({
   from: z.optional(ConnectionIdSchema),
 });
 
-const ChatFacetSchema = z.union(
+const facetSpan = <T extends z.ZodMiniObject>(it: T) =>
+  z.extend(it, { start: z.number(), end: z.number() });
+const ChatFacetSchema = z.discriminatedUnion(
   [
-    z.object({ type: z.literal("link"), link: z.string() }),
-    z.object({ type: z.literal("strong") }),
-    z.object({ type: z.literal("emphasis") }),
-    z.object({ type: z.literal("custom-emoji"), id: z.string() }),
-    z.object({ type: z.literal("color"), color: z.string() }),
-  ].map(it => z.extend(it, { start: z.number(), end: z.number() })), // utf-16 code units
+    z.object({ type: z.literal("link"), link: z.string() }).pipe(facetSpan),
+    z.object({ type: z.literal("strong") }).pipe(facetSpan),
+    z.object({ type: z.literal("emphasis") }).pipe(facetSpan),
+    z.object({ type: z.literal("custom-emoji"), id: z.string() }).pipe(facetSpan),
+    z.object({ type: z.literal("color"), color: z.string() }).pipe(facetSpan),
+  ], // utf-16 code units
 );
 export type ChatFacet = z.infer<typeof ChatFacetSchema>;
 
 const ChatMessageSchema = z.object({
   type: z.literal("ChatMessage"),
   text: z.string(),
-  facets: ChatFacetSchema.array(),
+  facets: ChatFacetSchema.pipe(z.array),
 });
 
 const ServerChatMessageSchema = z.extend(ChatMessageSchema, { from: ConnectionIdSchema });
@@ -123,13 +125,13 @@ const ChatHistorySchema = z.object({
         displayColor: z.string(),
       }),
       text: z.string(),
-      facets: ChatFacetSchema.array(),
+      facets: ChatFacetSchema.pipe(z.array),
       system: z.boolean(),
     })
-    .array(),
+    .pipe(z.array),
 });
 
-export const ClientPacketSchema = z.union([
+export const ClientPacketSchema = z.discriminatedUnion([
   LeaveSessionSchema,
   ChatMessageSchema,
   RequestPeerListSchema,
@@ -142,7 +144,7 @@ export const ClientPacketSchema = z.union([
   EditPlaylistItemSchema,
 ]);
 
-export const ServerPacketSchema = z.union([
+export const ServerPacketSchema = z.discriminatedUnion([
   HandshakeSchema,
   PeerAddedSchema,
   PeerDroppedSchema,

@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "@zod/mini";
 import { Peer, PeerSchema } from "./peer.ts";
 
 export interface PlaylistItem {
@@ -13,6 +13,6 @@ export const PlaylistItemSchema = z.object({
   video: z.string(),
   mirrors: z.array(z.string()),
   subtitles: z.array(z.object({ name: z.string(), url: z.string() })),
-  fromPeer: PeerSchema.optional(),
-  isAudio: z.boolean().default(false),
+  fromPeer: PeerSchema.pipe(z.optional),
+  isAudio: z.boolean().pipe(it => z._default(it, false)),
 });

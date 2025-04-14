@@ -1,5 +1,5 @@
 import { Signal } from "@char/aftercare";
-import * as z from "zod";
+import * as z from "@zod/mini";
 
 import { PlaylistItem } from "../../common/playlist.ts";
 import { bindValue, onEvent } from "../util.ts";

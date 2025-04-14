@@ -1,4 +1,4 @@
-import * as z from "zod";
+import * as z from "@zod/mini";
 
 export interface Peer {
   connectionId: string;

@@ -1,5 +1,5 @@
 import { Context as OakContext, Status } from "@oak/oak";
-import * as z from "zod";
+import * as z from "@zod/mini";
 
 export type APIResponseType = unknown & object;
 
