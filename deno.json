@@ -1,6 +1,5 @@
 {
   "tasks": {
-    "vendor:fetch": "deno run -A ./_patch-valita.ts",
     "client:build": "deno run -A ./_build.ts",
     "client:watch": "deno run -A ./_build.ts --watch",
     "server:start": "deno run -A --unstable-temporal ./server/main.ts",
