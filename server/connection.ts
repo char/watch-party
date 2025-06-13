@@ -1,6 +1,6 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { Peer } from "../common/peer.ts";
-import { ClientPacketSchema, ServerPacket } from "../common/proto.ts";
+import { ServerPacket, validateClientPacket } from "../common/proto.ts";
 import { WatchSession } from "./session.ts";
 // @ts-types="@char/aftercare"
 import { safely } from "@char/aftercare";
@@ -50,8 +50,8 @@ export function handleConnection(
   const onMessage = (frame: Uint8Array) => {
     const packet = frame
       .pipe(it => safely(decodeCbor)(it)[0] as object)
-      ?.pipe(safely((data: unknown) => ClientPacketSchema.parse(data)))
-      ?.pipe(res => res[0]);
+      ?.pipe(validateClientPacket)
+      ?.pipe(it => it.value);
     if (!packet) return;
 
     connection.lastKeepalive = Date.now();

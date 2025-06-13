@@ -1,7 +1,7 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { LazySignal } from "@char/aftercare";
 import { Peer } from "../../common/peer.ts";
-import { ClientPacket, ServerPacket, ServerPacketSchema } from "../../common/proto.ts";
+import { ClientPacket, ServerPacket, validateServerPacket } from "../../common/proto.ts";
 import { BasicSignalHandler } from "../signals.ts";
 import { app, UserInfo } from "./app.ts";
 import { PlayheadOverride, PlaylistChange, VideoState } from "./video-state.ts";
@@ -170,12 +170,11 @@ async function connectViaSocket(socket: WebSocket): Promise<SessionConnection> {
   socket.addEventListener("message", event => {
     if (!(event.data instanceof ArrayBuffer)) return;
     const packet = decodeCbor(new Uint8Array(event.data))?.pipe((data: unknown) => {
-      try {
-        return ServerPacketSchema.parse(data);
-      } catch (err) {
-        console.warn("error decoding packet:", err);
-        return undefined;
+      const { value, errors } = validateServerPacket(data);
+      if (errors) {
+        console.warn("error decoding packet:", errors);
       }
+      return value;
     });
     if (!packet) return;
 

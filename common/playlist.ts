@@ -1,18 +1,11 @@
-import * as z from "@zod/mini";
-import { Peer, PeerSchema } from "./peer.ts";
+import * as j from "@char/justin";
+import { PeerSchema } from "./peer.ts";
 
-export interface PlaylistItem {
-  video: string;
-  mirrors: string[];
-  subtitles: { name: string; url: string }[];
-  fromPeer?: Peer; // connection id
-  isAudio?: boolean;
-}
-
-export const PlaylistItemSchema = z.object({
-  video: z.string(),
-  mirrors: z.array(z.string()),
-  subtitles: z.array(z.object({ name: z.string(), url: z.string() })),
-  fromPeer: PeerSchema.pipe(z.optional),
-  isAudio: z.boolean().pipe(it => z._default(it, false)),
+export const PlaylistItemSchema = j.obj({
+  video: j.string,
+  mirrors: j.array(j.string),
+  subtitles: j.array(j.obj({ name: j.string, url: j.string })),
+  fromPeer: PeerSchema.pipe(j.optional),
+  isAudio: j.optional(j.boolean),
 });
+export type PlaylistItem = j.Infer<typeof PlaylistItemSchema>;

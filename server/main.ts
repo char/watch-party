@@ -1,7 +1,7 @@
 import "https://char.lt/esm/pipe.ts";
 
+import * as j from "@char/justin";
 import { Application, HttpError, Router, Status } from "@oak/oak";
-import * as z from "@zod/mini";
 
 import { PlaylistItemSchema } from "../common/playlist.ts";
 import { handleConnection, SessionConnection } from "./connection.ts";
@@ -66,9 +66,9 @@ router.put(
   "/api/session",
   apiHandler(
     {
-      body: z.object({
-        id: z.string().pipe(z.optional),
-        playlist: PlaylistItemSchema.pipe(z.array).pipe(z.optional),
+      body: j.obj({
+        id: j.string.pipe(j.optional),
+        playlist: PlaylistItemSchema.pipe(j.array).pipe(j.optional),
       }),
     },
     (_ctx, { body }) => {

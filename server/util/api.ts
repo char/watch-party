@@ -1,5 +1,5 @@
+import * as j from "@char/justin";
 import { Context as OakContext, Status } from "@oak/oak";
-import * as z from "@zod/mini";
 
 export type APIResponseType = unknown & object;
 
@@ -14,23 +14,23 @@ export class APIError extends Error {
 }
 
 interface TypedJsonHandlerOptions<
-  QuerySchema extends z.ZodType | undefined = undefined,
-  BodySchema extends z.ZodType | undefined = undefined,
+  QuerySchema extends j.AnySchema | undefined = undefined,
+  BodySchema extends j.AnySchema | undefined = undefined,
 > {
   query?: QuerySchema;
   body?: BodySchema;
 }
 interface TypedJsonHandlerInput<
-  QuerySchema extends z.ZodType | undefined = undefined,
-  BodySchema extends z.ZodType | undefined = undefined,
+  QuerySchema extends j.AnySchema | undefined = undefined,
+  BodySchema extends j.AnySchema | undefined = undefined,
 > {
-  query: z.infer<NonNullable<QuerySchema>>;
-  body: z.infer<NonNullable<BodySchema>>;
+  query: j.Infer<NonNullable<QuerySchema>>;
+  body: j.Infer<NonNullable<BodySchema>>;
 }
 type TypedJsonHandlerCallback<
   Context,
-  QuerySchema extends z.ZodType | undefined = undefined,
-  BodySchema extends z.ZodType | undefined = undefined,
+  QuerySchema extends j.AnySchema | undefined = undefined,
+  BodySchema extends j.AnySchema | undefined = undefined,
 > = (
   ctx: Context,
   input: TypedJsonHandlerInput<QuerySchema, BodySchema>,
@@ -38,8 +38,8 @@ type TypedJsonHandlerCallback<
 
 export function apiHandler<
   Context extends OakContext,
-  QuerySchema extends z.ZodType | undefined = undefined,
-  BodySchema extends z.ZodType | undefined = undefined,
+  QuerySchema extends j.AnySchema | undefined = undefined,
+  BodySchema extends j.AnySchema | undefined = undefined,
 >(
   opts: TypedJsonHandlerOptions<QuerySchema, BodySchema>,
   callback: TypedJsonHandlerCallback<Context, QuerySchema, BodySchema>,
@@ -49,46 +49,35 @@ export function apiHandler<
       const input: Partial<TypedJsonHandlerInput<QuerySchema, BodySchema>> = {};
 
       if (opts.query) {
-        try {
-          const query = ctx.request.url.searchParams.entries().pipe(Object.fromEntries);
-          const result = opts.query.parse(query);
-          input.query = result;
-        } catch (err) {
-          if (err instanceof z.ZodError) {
-            throw new APIError(
-              Status.BadRequest,
-              `error parsing query parameters: ${err.message}`,
-              {
-                issues: err.issues.map(it =>
-                  it.path.length ? `${it.path.join("/")}: ${it.code}` : it.code,
-                ),
-              },
-            );
-          } else throw err;
+        const query = ctx.request.url.searchParams.entries().pipe(Object.fromEntries);
+        const validateQuery = j.compile(opts.query);
+
+        const { value, errors } = validateQuery(query);
+        if (errors) {
+          throw new APIError(Status.BadRequest, `error parsing query parameters`, {
+            issues: errors.map(it => `${it.path}: ${it.msg}`),
+          });
+        } else {
+          input.query = value;
         }
       }
 
       if (opts.body) {
-        try {
-          const body = await ctx.request.body
-            .text()
-            .then(t => (t ? JSON.parse(t) : {}))
-            .catch(() =>
-              Promise.reject(new APIError(Status.BadRequest, "body was not JSON-encoded")),
-            );
-          input.body = opts.body.parse(body);
-        } catch (err) {
-          if (err instanceof z.ZodError) {
-            throw new APIError(
-              Status.BadRequest,
-              `error parsing request body: ${err.message}`,
-              {
-                issues: err.issues.map(it =>
-                  it.path.length ? `${it.path.join(".")}: ${it.code}` : it.code,
-                ),
-              },
-            );
-          } else throw err;
+        const body = await ctx.request.body
+          .text()
+          .then(t => (t ? JSON.parse(t) : {}))
+          .catch(() =>
+            Promise.reject(new APIError(Status.BadRequest, "body was not JSON-encoded")),
+          );
+
+        const validateBody = j.compile(opts.body);
+        const { value, errors } = validateBody(body);
+        if (errors) {
+          throw new APIError(Status.BadRequest, `error parsing request body: ${err.message}`, {
+            issues: errors.map(it => `${it.path}: ${it.msg}`),
+          });
+        } else {
+          input.body = value;
         }
       }
 

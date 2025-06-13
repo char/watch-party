@@ -1,3 +1,6 @@
 [submodule "vendor/aftercare"]
 	path = vendor/aftercare
 	url = https://github.com/char/aftercare.git
+[submodule "vendor/justin"]
+	path = vendor/justin
+	url = https://github.com/char/justin.git

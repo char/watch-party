@@ -1,5 +1,5 @@
 import { Signal } from "@char/aftercare";
-import * as z from "@zod/mini";
+import * as j from "@char/justin";
 
 import { PlaylistItem } from "../../common/playlist.ts";
 import { bindValue, onEvent } from "../util.ts";
@@ -34,7 +34,10 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
             playlist,
           }),
         });
-        const info = z.object({ id: z.string() }).parse(await response.json());
+        const InfoSchema = j.obj({ id: j.string });
+        const validateInfo = j.compile(InfoSchema);
+        const { value: info, errors } = validateInfo(await response.json());
+        if (errors) throw new Error("failed to parse session info: " + JSON.stringify(errors));
         createCallback(info.id);
       })}
       id="create-form"

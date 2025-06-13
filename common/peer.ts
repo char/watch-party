@@ -1,13 +1,9 @@
-import * as z from "@zod/mini";
+import * as j from "@char/justin";
 
-export interface Peer {
-  connectionId: string;
-  nickname: string;
-  displayColor: string;
-}
-
-export const PeerSchema = z.object({
-  connectionId: z.string(),
-  nickname: z.string(),
-  displayColor: z.string(),
+export const PeerSchema = j.obj({
+  connectionId: j.string,
+  nickname: j.string,
+  displayColor: j.string,
 });
+export type Peer = j.Infer<typeof PeerSchema>;
+export const validatePeer = j.compile(PeerSchema);
