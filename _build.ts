@@ -6,6 +6,6 @@ if (import.meta.main) {
     in: ["./client/main.ts", "./client/main-create.ts"],
     outDir: "./web/dist",
     watch,
-    extraOptions: { loader: { ".wasm": "file" }, splitting: true, minify: false },
+    extraOptions: { loader: { ".wasm": "file" }, splitting: true },
   });
 }
