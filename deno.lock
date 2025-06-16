@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@char/justin@~0.3.4": "0.3.4",
+    "jsr:@char/justin@~0.3.5": "0.3.5",
     "jsr:@luca/esbuild-deno-loader@0.11": "0.11.1",
     "jsr:@mary/base32@0.1": "0.1.0",
     "jsr:@oak/commons@1": "1.0.0",
@@ -26,8 +26,8 @@
     "npm:path-to-regexp@^6.3.0": "6.3.0"
   },
   "jsr": {
-    "@char/justin@0.3.4": {
-      "integrity": "14662b41a456e0a824c8c19ff69049679e19e39f5dd3290388cca1e803685dd6"
+    "@char/justin@0.3.5": {
+      "integrity": "d0eb168c26fa9080479451b281e14bec04a91a0248620c85e9f53a356056fefc"
     },
     "@luca/esbuild-deno-loader@0.11.1": {
       "integrity": "dc020d16d75b591f679f6b9288b10f38bdb4f24345edb2f5732affa1d9885267",
@@ -297,7 +297,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@char/justin@~0.3.4",
+      "jsr:@char/justin@~0.3.5",
       "jsr:@mary/base32@0.1",
       "jsr:@oak/oak@^17.1.4",
       "jsr:@std/json@^1.0.1",
