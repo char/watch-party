@@ -29,7 +29,7 @@ const PeerAddedSchema = j.obj({
 const PeerDroppedSchema = j.obj({
   type: j.literal("PeerDropped"),
   connectionId: ConnectionIdSchema,
-  reason: j.union(j.literal("disconnect"), j.literal("timeout")),
+  reason: j.union(j.literal("disconnect"), j.literal("timeout"), j.literal("error")),
 });
 
 const RequestPeerListSchema = j.obj({

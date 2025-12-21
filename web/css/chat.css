@@ -22,6 +22,11 @@
       text-align: right;
     }
 
+    .danger {
+      background-color: red;
+      color: white;
+    }
+
     p {
       margin-bottom: 0;
     }

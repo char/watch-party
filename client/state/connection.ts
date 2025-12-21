@@ -34,11 +34,15 @@ export class SessionConnection extends BasicSignalHandler {
   peers = new Map<string, ClientPeer>();
   video: VideoState;
 
+  resumptionToken: string;
+
   constructor(
     public socket: WebSocket,
     handshakePacket: ServerPacket<"Handshake">,
   ) {
     super();
+
+    this.resumptionToken = handshakePacket.resumptionToken;
 
     this.user = {
       connectionId: handshakePacket.connectionId,
@@ -203,8 +207,9 @@ export const connectToSession = (user: UserInfo, session: string) =>
 
 export const reconnectToSession = (session: string, resumptionToken: string) =>
   new WebSocket(
-    new URL(`/api/session/${session}/connect`).tap(u => {
-      u.searchParams.set("resume", resumptionToken);
+    new URLSearchParams().pipe(it => {
+      it.set("resume", resumptionToken);
+      return `/api/session/${session}/connect?${it.toString()}`;
     }),
   )
     .tap(s => (s.binaryType = "arraybuffer"))

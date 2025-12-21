@@ -30,6 +30,10 @@ export class PlayheadOverride {
   ) {}
 }
 
+export class Reconnected {}
+
+export class LostConnection {}
+
 export class VideoState extends BasicSignalHandler {
   playedAt: number | undefined;
   lastPlayhead: number = 0;

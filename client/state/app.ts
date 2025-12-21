@@ -1,6 +1,11 @@
 import { LazySignal, Signal } from "@char/aftercare";
-import { connectToSession, SessionConnection } from "../state/connection.ts";
+import {
+  connectToSession,
+  reconnectToSession,
+  SessionConnection,
+} from "../state/connection.ts";
 import { PlaylistManagement } from "../ui/playlist-management.tsx";
+import { LostConnection, Reconnected } from "./video-state.ts";
 
 export interface UserInfo {
   nickname: string;
@@ -35,12 +40,32 @@ export const app = {
     if (connecting) return;
     try {
       connecting = true;
-      const session = await connectToSession(user, sessionId);
-
+      let session = await connectToSession(user, sessionId);
       const existingSession = app.session.get();
       if (existingSession) existingSession.dispose();
-
       app.session.set(session);
+
+      const tryReconnect = async () => {
+        if (session.abort.aborted) return;
+
+        try {
+          session = await reconnectToSession(sessionId, session.resumptionToken);
+          // console.log("reconnected!");
+          const existingSession = app.session.get();
+          if (existingSession) existingSession.dispose();
+          app.session.set(session);
+
+          session.video.fire(Reconnected);
+          session.socket.addEventListener("error", tryReconnect);
+          session.socket.addEventListener("close", tryReconnect);
+        } catch (err) {
+          console.warn(err);
+          // TODO: failed to reconnect. what do?
+          session.video.fire(LostConnection);
+        }
+      };
+      session.socket.addEventListener("error", tryReconnect);
+      session.socket.addEventListener("close", tryReconnect);
     } finally {
       connecting = false;
     }

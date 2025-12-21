@@ -8,7 +8,12 @@ import {
   ReceivedPacket,
   SessionConnection,
 } from "../state/connection.ts";
-import { PlayheadOverride, PlaylistChange } from "../state/video-state.ts";
+import {
+  LostConnection,
+  PlayheadOverride,
+  PlaylistChange,
+  Reconnected,
+} from "../state/video-state.ts";
 import { bindValue, formatTime, onEvent } from "../util.ts";
 import { createPlaylistAppendForm } from "./append-to-playlist.tsx";
 
@@ -63,6 +68,18 @@ export class ChatWindow {
     this.session.video.on(PlaylistChange, ev => {
       if (!ev.originator || ev.originator === "local" || ev.originator === "server") return;
       this.append(ChatMessage(ev.originator, "updated the playlist", [], true));
+    });
+
+    this.session.video.on(Reconnected, () => {
+      this.append(<article className="system">Reconnected after losing connection.</article>);
+    });
+
+    this.session.video.on(LostConnection, () => {
+      this.append(
+        <article className="system danger">
+          <strong>You lost connection.</strong> Please refresh the page.
+        </article>,
+      );
     });
   }
 

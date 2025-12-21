@@ -22,7 +22,15 @@ export function handleConnection(
   connection.sockets.add(socket);
 
   const send = (packet: ServerPacket) => {
-    socket.send(encodeCbor(packet));
+    try {
+      socket.send(encodeCbor(packet));
+    } catch (err) {
+      console.warn("dropping connection", err);
+      connection.sockets.delete(socket);
+      if (connection.sockets.size === 0) {
+        session.dropPeer(connection, "error");
+      }
+    }
   };
 
   const onReady = () => {
