@@ -60,7 +60,6 @@ export const app = {
           session.socket.addEventListener("close", tryReconnect);
         } catch (err) {
           console.warn(err);
-          // TODO: failed to reconnect. what do?
           session.video.fire(LostConnection);
         }
       };
