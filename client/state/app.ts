@@ -50,7 +50,6 @@ export const app = {
 
         try {
           session = await reconnectToSession(sessionId, session.resumptionToken);
-          // console.log("reconnected!");
           const existingSession = app.session.get();
           if (existingSession) existingSession.dispose();
           app.session.set(session);
@@ -61,6 +60,7 @@ export const app = {
         } catch (err) {
           console.warn(err);
           session.video.fire(LostConnection);
+          session.dispose();
         }
       };
       session.socket.addEventListener("error", tryReconnect);
