@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "client:build": "deno run -A ./_build.ts",
-    "client:watch": "deno run -A ./_build.ts --watch",
+    "client:build": "deno run -A @char/aftercare/bundle -i ./client/main.ts -i ./client/main-create.ts -o ./web/dist",
+    "client:watch": "deno task client:build --watch",
     "server:start": "deno run -A --unstable-temporal ./server/main.ts",
     "server:watch": "deno run -A --unstable-temporal --watch ./server/main.ts",
     "start": "deno task client:build && deno task server:start",
@@ -9,7 +9,7 @@
   },
   "imports": {
     "@atcute/cbor": "npm:@atcute/cbor@^2.2.8",
-    "@char/aftercare": "jsr:@char/aftercare@^0.5.3",
+    "@char/aftercare": "jsr:@char/aftercare@^0.5.4",
     "@char/justin": "jsr:@char/justin@^0.3.5",
     "@mary/base32": "jsr:@mary/base32@^0.1.0",
     "@oak/oak": "jsr:@oak/oak@^17.2.0",
