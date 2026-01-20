@@ -56,7 +56,7 @@ export function createPlayer(session: SessionConnection) {
               .map(
                 s => (<track kind="captions" label={s.name} src={s.url} />) as HTMLTrackElement,
               )
-              .tap(list => {
+              .$tap(list => {
                 if (list[0]) list[0].default = true;
               })}
           </video>
@@ -64,8 +64,8 @@ export function createPlayer(session: SessionConnection) {
     video.volume =
       localStorage
         .getItem("watch-party/last-volume")
-        ?.pipe(Number)
-        .pipe(it => (Number.isFinite(it) ? it : undefined)) ?? 0.8;
+        ?.$pipe(Number)
+        .$pipe(it => (Number.isFinite(it) ? it : undefined)) ?? 0.8;
     videoElement = video;
     videoContainer.append(video);
     video.currentTime = session.video.playhead / 1000;
@@ -127,14 +127,13 @@ export function createPlayer(session: SessionConnection) {
     }
 
     if (videoItem.mirrors.length) {
-      // TODO: show a mirror picker :3
       const picker = (
         <div id="mirror-picker">
           <h2>select a mirror:</h2>
 
           <button
             type="button"
-            _tap={onEvent("click", () => {
+            _also={onEvent("click", () => {
               picker.remove();
               showVideo(videoItem);
             })}
@@ -145,7 +144,7 @@ export function createPlayer(session: SessionConnection) {
           {...videoItem.mirrors.map(mirror => (
             <button
               type="button"
-              _tap={onEvent("click", () => {
+              _also={onEvent("click", () => {
                 picker.remove();
                 showVideo({ ...videoItem, video: mirror });
               })}

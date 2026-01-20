@@ -49,7 +49,7 @@ export function apiHandler<
       const input: Partial<TypedJsonHandlerInput<QuerySchema, BodySchema>> = {};
 
       if (opts.query) {
-        const query = ctx.request.url.searchParams.entries().pipe(Object.fromEntries);
+        const query = ctx.request.url.searchParams.entries().$pipe(Object.fromEntries);
         const validateQuery = j.compile(opts.query);
 
         const { value, errors } = validateQuery(query);
@@ -73,7 +73,7 @@ export function apiHandler<
         const validateBody = j.compile(opts.body);
         const { value, errors } = validateBody(body);
         if (errors) {
-          throw new APIError(Status.BadRequest, `error parsing request body: ${err.message}`, {
+          throw new APIError(Status.BadRequest, `error parsing request body`, {
             issues: errors.map(it => `${it.path}: ${it.msg}`),
           });
         } else {

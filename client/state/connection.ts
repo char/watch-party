@@ -1,5 +1,5 @@
 import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
-import { LazySignal } from "@char/aftercare";
+import { LazySignal } from "../../common/lazy-signal.ts";
 import { Peer } from "../../common/peer.ts";
 import { ClientPacket, ServerPacket, validateServerPacket } from "../../common/proto.ts";
 import { BasicSignalHandler } from "../signals.ts";
@@ -155,7 +155,7 @@ export class SessionConnection extends BasicSignalHandler {
       // TODO: packet.from ?
       this.video.fire(
         PlaylistChange,
-        packet.from?.pipe(it => this.peers.get(it)) ?? "server",
+        packet.from?.$pipe(it => this.peers.get(it)) ?? "server",
         packet.playlist,
         packet.playlistIndex,
       );
@@ -173,7 +173,7 @@ async function connectViaSocket(socket: WebSocket): Promise<SessionConnection> {
 
   socket.addEventListener("message", event => {
     if (!(event.data instanceof ArrayBuffer)) return;
-    const packet = decodeCbor(new Uint8Array(event.data))?.pipe((data: unknown) => {
+    const packet = decodeCbor(new Uint8Array(event.data))?.$pipe((data: unknown) => {
       const { value, errors } = validateServerPacket(data);
       if (errors) {
         console.warn("error decoding packet:", errors);
@@ -196,21 +196,21 @@ async function connectViaSocket(socket: WebSocket): Promise<SessionConnection> {
 
 export const connectToSession = (user: UserInfo, session: string) =>
   new WebSocket(
-    new URLSearchParams().pipe(it => {
+    new URLSearchParams().$pipe(it => {
       it.set("nickname", user.nickname);
       it.set("color", user.displayColor);
       return `/api/session/${session}/connect?${it.toString()}`;
     }),
   )
-    .tap(s => (s.binaryType = "arraybuffer"))
-    .pipe(connectViaSocket);
+    .$tap(s => (s.binaryType = "arraybuffer"))
+    .$pipe(connectViaSocket);
 
 export const reconnectToSession = (session: string, resumptionToken: string) =>
   new WebSocket(
-    new URLSearchParams().pipe(it => {
+    new URLSearchParams().$pipe(it => {
       it.set("resume", resumptionToken);
       return `/api/session/${session}/connect?${it.toString()}`;
     }),
   )
-    .tap(s => (s.binaryType = "arraybuffer"))
-    .pipe(connectViaSocket);
+    .$tap(s => (s.binaryType = "arraybuffer"))
+    .$pipe(connectViaSocket);

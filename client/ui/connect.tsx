@@ -10,7 +10,7 @@ export const createConnectForm = () => {
 
   const connectForm = (
     <form
-      _tap={onEvent("submit", ev => {
+      _also={onEvent("submit", ev => {
         ev.preventDefault();
         app.user.set({ nickname: nickname.get(), displayColor: displayColor.get() });
 
@@ -19,15 +19,15 @@ export const createConnectForm = () => {
       id="connect-form"
     >
       <label htmlFor="nickname">nickname</label>
-      <input _tap={bindValue(nickname)} id="nickname" placeholder="nickname" required />
+      <input _also={bindValue(nickname)} id="nickname" placeholder="nickname" required />
 
       <label htmlFor="display-color">display name color</label>
       <div className="group">
-        <input type="color" _tap={bindValue(displayColor)} id="display-color" required />
+        <input type="color" _also={bindValue(displayColor)} id="display-color" required />
         {` `}
         <span>
           <strong
-            _tap={s => {
+            _also={s => {
               nickname.subscribeImmediate(v => (s.textContent = v));
               displayColor.subscribeImmediate(v => (s.style.color = v));
             }}
@@ -38,7 +38,7 @@ export const createConnectForm = () => {
 
       <label htmlFor="session-id">session id</label>
       <input
-        _tap={bindValue(app.sessionId)}
+        _also={bindValue(app.sessionId)}
         id="session-id"
         placeholder="{random string}"
         required

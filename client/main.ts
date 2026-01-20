@@ -1,4 +1,4 @@
-import "https://char.lt/esm/pipe.ts";
+import "../common/pipe.ts";
 import "./polyfills/mod.ts";
 
 import { app } from "./state/app.ts";
@@ -17,7 +17,7 @@ const creationForm = createCreationForm(id => {
 });
 linkForms(connectForm, creationForm);
 
-if (!app.session.get()) main.append(connectForm);
+if (!app.session.ready()) main.append(connectForm);
 
 app.session.subscribeImmediate(conn => {
   connectForm.remove();

@@ -1,4 +1,4 @@
-import { build } from "@char/aftercare/esbuild";
+import { build } from "@char/aftercare/bundle";
 
 if (import.meta.main) {
   const watch = Deno.args.includes("--watch");
@@ -6,6 +6,6 @@ if (import.meta.main) {
     in: ["./client/main.ts", "./client/main-create.ts"],
     outDir: "./web/dist",
     watch,
-    extraOptions: { loader: { ".wasm": "file" }, splitting: true },
+    overrides: { loader: { ".wasm": "file" }, splitting: true },
   });
 }

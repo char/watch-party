@@ -14,7 +14,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
 
   return (
     <form
-      _tap={onEvent("submit", async ev => {
+      _also={onEvent("submit", async ev => {
         ev.preventDefault();
         const playlist: PlaylistItem[] = [
           {
@@ -45,11 +45,11 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
       <label htmlFor="session-id">
         id <small>(leave blank to generate random)</small>
       </label>
-      <input _tap={bindValue(id)} id="session-id" placeholder="my-movie" />
+      <input _also={bindValue(id)} id="session-id" placeholder="my-movie" />
 
       <label htmlFor="video-url">video URL</label>
       <input
-        _tap={bindValue(video)}
+        _also={bindValue(video)}
         id="video-url"
         type="url"
         placeholder="https://example.com/my-movie.mp4"

@@ -27,7 +27,7 @@ function ChatMessage(
 
   message.append(
     <strong
-      _tap={it => (it.style.color = from.displayColor)}
+      _also={it => (it.style.color = from.displayColor)}
       dataset={{ peer: from.connectionId }}
     >
       {from.nickname}
@@ -96,7 +96,7 @@ export class ChatWindow {
     const args = command.split(/\s+/);
     switch (args[0].toLowerCase()) {
       case "sync": {
-        app.session.get()!.send({ type: "RequestPlayheadSync" });
+        app.session.get().send({ type: "RequestPlayheadSync" });
         break;
       }
       case "list": {
@@ -105,7 +105,7 @@ export class ChatWindow {
           list.append(
             <li>
               <strong
-                _tap={it => (it.style.color = peer.displayColor)}
+                _also={it => (it.style.color = peer.displayColor)}
                 dataset={{ peer: peer.connectionId }}
               >
                 {peer.nickname}
@@ -159,7 +159,7 @@ export class ChatWindow {
         break;
       }
       case "playlist": {
-        const dialog = app.management.get()?.elem;
+        const dialog = app.management.tryGet()?.elem;
         if (dialog) dialog.showModal();
         break;
       }
@@ -205,13 +205,13 @@ export class ChatWindow {
   #handleJoinLeave() {
     this.session.on(PeerJoined, ({ peer }) =>
       ChatMessage(peer, "joined", [], true)
-        .tap(it => it.classList.add("peer", "join"))
-        .pipe(e => this.append(e)),
+        .$tap(it => it.classList.add("peer", "join"))
+        .$pipe(e => this.append(e)),
     );
     this.session.on(PeerLeft, ({ peer }) =>
       ChatMessage(peer, "left", [], true)
-        .tap(it => it.classList.add("peer", "leave"))
-        .pipe(e => this.append(e)),
+        .$tap(it => it.classList.add("peer", "leave"))
+        .$pipe(e => this.append(e)),
     );
   }
 
@@ -238,7 +238,7 @@ export class ChatWindow {
       }
       if (event.originator === "local" && app.locked.get()) return;
 
-      const from = event.originator === "local" ? app.session.get()!.user : event.originator;
+      const from = event.originator === "local" ? app.session.get().user : event.originator;
       if (!from) return;
 
       const playState = event.paused ? "paused" : "started playing";
@@ -248,7 +248,7 @@ export class ChatWindow {
         `${playState} at ${formatTime(event.playhead)}`,
         [],
         true,
-      ).tap(it => it.classList.add("playhead"));
+      ).$tap(it => it.classList.add("playhead"));
 
       if (
         this.#lastMessage !== undefined &&
@@ -290,7 +290,7 @@ export class ChatWindow {
     return (
       <form
         id="chat-form"
-        _tap={onEvent("submit", e => {
+        _also={onEvent("submit", e => {
           e.preventDefault();
           const message = messageToSend.get();
           if (!message.trim()) return;
@@ -305,7 +305,7 @@ export class ChatWindow {
         })}
       >
         <input
-          _tap={bindValue(messageToSend)}
+          _also={bindValue(messageToSend)}
           type="text"
           placeholder="message (or /help for commands)"
         />

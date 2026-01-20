@@ -12,7 +12,7 @@ const HandshakeSchema = j.obj({
   resumptionToken: j.string,
 
   session: j.string,
-  playlist: PlaylistItemSchema.pipe(j.array),
+  playlist: PlaylistItemSchema.$pipe(j.array),
   playlistIndex: j.number,
   paused: j.boolean,
   playhead: j.number,
@@ -39,7 +39,7 @@ const FullUserListSchema = j.obj({
   type: j.literal("FullPeerList"),
   peers: j
     .obj({ connectionId: j.string, nickname: j.string, displayColor: j.string })
-    .pipe(j.array),
+    .$pipe(j.array),
 });
 
 const LeaveSessionSchema = j.obj({
@@ -101,11 +101,11 @@ const facetSpan = <const Shape extends Record<string, j.AnySchema>>(
 const ChatFacetSchema = j.discriminatedUnion(
   "type",
   [
-    j.obj({ type: j.literal("link"), link: j.string }).pipe(facetSpan),
-    j.obj({ type: j.literal("strong") }).pipe(facetSpan),
-    j.obj({ type: j.literal("emphasis") }).pipe(facetSpan),
-    j.obj({ type: j.literal("custom-emoji"), id: j.string }).pipe(facetSpan),
-    j.obj({ type: j.literal("color"), color: j.string }).pipe(facetSpan),
+    j.obj({ type: j.literal("link"), link: j.string }).$pipe(facetSpan),
+    j.obj({ type: j.literal("strong") }).$pipe(facetSpan),
+    j.obj({ type: j.literal("emphasis") }).$pipe(facetSpan),
+    j.obj({ type: j.literal("custom-emoji"), id: j.string }).$pipe(facetSpan),
+    j.obj({ type: j.literal("color"), color: j.string }).$pipe(facetSpan),
   ], // utf-16 code units
 );
 export type ChatFacet = j.Infer<typeof ChatFacetSchema>;
@@ -113,7 +113,7 @@ export type ChatFacet = j.Infer<typeof ChatFacetSchema>;
 const ChatMessageSchema = j.obj({
   type: j.literal("ChatMessage"),
   text: j.string,
-  facets: ChatFacetSchema.pipe(j.array),
+  facets: ChatFacetSchema.$pipe(j.array),
 });
 
 const ServerChatMessageSchema = j.obj({ ...ChatMessageSchema.shape, from: ConnectionIdSchema });
@@ -128,10 +128,10 @@ const ChatHistorySchema = j.obj({
         displayColor: j.string,
       }),
       text: j.string,
-      facets: ChatFacetSchema.pipe(j.array),
+      facets: ChatFacetSchema.$pipe(j.array),
       system: j.boolean,
     })
-    .pipe(j.array),
+    .$pipe(j.array),
 });
 
 export const ClientPacketSchema = j.discriminatedUnion("type", [

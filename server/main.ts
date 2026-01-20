@@ -1,4 +1,4 @@
-import "https://char.lt/esm/pipe.ts";
+import "../common/pipe.ts";
 
 import * as j from "@char/justin";
 import { Application, HttpError, Router, Status } from "@oak/oak";
@@ -67,8 +67,8 @@ router.put(
   apiHandler(
     {
       body: j.obj({
-        id: j.string.pipe(j.optional),
-        playlist: PlaylistItemSchema.pipe(j.array).pipe(j.optional),
+        id: j.string.$pipe(j.optional),
+        playlist: PlaylistItemSchema.$pipe(j.array).$pipe(j.optional),
       }),
     },
     (_ctx, { body }) => {

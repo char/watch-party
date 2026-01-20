@@ -5,7 +5,7 @@ export const linkForms = (connectForm: Element, creationForm: Element) => {
     <p>
       don't have a session id? you might want to{" "}
       <a
-        _tap={onEvent("click", e => {
+        _also={onEvent("click", e => {
           e.preventDefault();
           connectForm.parentElement!.append(creationForm);
           connectForm.remove();
@@ -22,7 +22,7 @@ export const linkForms = (connectForm: Element, creationForm: Element) => {
     <p>
       already have a session? you might want to{" "}
       <a
-        _tap={onEvent("click", e => {
+        _also={onEvent("click", e => {
           e.preventDefault();
           creationForm.parentElement!.append(connectForm);
           creationForm.remove();

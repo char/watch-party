@@ -24,7 +24,7 @@ export function createPlaylistAppendForm(session: SessionConnection) {
     <form _onsubmit={submit}>
       <label htmlFor="video-url">video URL</label>
       <input
-        _tap={bindValue(video)}
+        _also={bindValue(video)}
         id="video-url"
         type="url"
         placeholder="https://example.com/my-movie.mp4"

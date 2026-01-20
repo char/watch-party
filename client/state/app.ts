@@ -1,4 +1,5 @@
-import { LazySignal, Signal } from "@char/aftercare";
+import { Signal } from "@char/aftercare";
+import { LazySignal } from "../../common/lazy-signal.ts";
 import {
   connectToSession,
   reconnectToSession,
@@ -17,7 +18,7 @@ let connecting = false;
 export const app = {
   locked: new Signal(false),
 
-  user: new Signal<UserInfo | undefined>(undefined).tap(s => {
+  user: new Signal<UserInfo | undefined>(undefined).$tap(s => {
     const nickname = localStorage.getItem("watch-party/last-nickname") ?? undefined;
     const displayColor = localStorage.getItem("watch-party/last-display-color") ?? "#ffffff";
     if (nickname) s.set({ nickname, displayColor });
@@ -41,7 +42,7 @@ export const app = {
     try {
       connecting = true;
       let session = await connectToSession(user, sessionId);
-      const existingSession = app.session.get();
+      const existingSession = app.session.tryGet();
       if (existingSession) existingSession.dispose();
       app.session.set(session);
 
@@ -50,7 +51,7 @@ export const app = {
 
         try {
           session = await reconnectToSession(sessionId, session.resumptionToken);
-          const existingSession = app.session.get();
+          const existingSession = app.session.tryGet();
           if (existingSession) existingSession.dispose();
           app.session.set(session);
 
@@ -70,7 +71,7 @@ export const app = {
     }
   },
 
-  sessionId: new Signal<string>(window.location.hash.substring(1)).tap(s => {
+  sessionId: new Signal<string>(window.location.hash.substring(1)).$tap(s => {
     let skip = false;
     s.subscribe(id => {
       skip = true;
@@ -87,7 +88,7 @@ export const app = {
 };
 
 app.session.subscribe(session => {
-  app.management.get()?.elem?.remove();
+  app.management.tryGet()?.elem?.remove();
   app.management.set(new PlaylistManagement(session));
 });
 

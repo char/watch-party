@@ -22,14 +22,14 @@ export class MirrorsContainer {
     const group = (
       <div className="group">
         <input
-          _tap={bindValue(mirror)}
+          _also={bindValue(mirror)}
           type="url"
           placeholder="https://…/my-video.mp4"
           required
         />
         <button
           type="button"
-          _tap={onEvent("click", () => {
+          _also={onEvent("click", () => {
             this.mirrors = this.mirrors.filter(it => it !== mirror);
             group.remove();
           })}
@@ -53,7 +53,7 @@ export class MirrorsContainer {
 
 export class SubtitlesContainer {
   addButton = (<button type="button">add</button>);
-  elem = (<div _tap={it => (it.style.display = "contents")} />);
+  elem = (<div _also={it => (it.style.display = "contents")} />);
 
   subtitles: { name: Signal<string>; url: Signal<string> }[] = [];
 
@@ -71,12 +71,12 @@ export class SubtitlesContainer {
     const group = (
       <div className="group">
         <input
-          _tap={bindValue(subtitle.url)}
+          _also={bindValue(subtitle.url)}
           type="url"
           placeholder="https://…/my-subs.vtt"
           required
         />
-        <input _tap={bindValue(subtitle.name)} placeholder="English" />
+        <input _also={bindValue(subtitle.name)} placeholder="English" />
       </div>
     );
     const remove = () => {
@@ -84,7 +84,7 @@ export class SubtitlesContainer {
       group.remove();
     };
     group.append(
-      <button _tap={onEvent("click", () => remove())} type="button" className="danger">
+      <button _also={onEvent("click", () => remove())} type="button" className="danger">
         -
       </button>,
     );

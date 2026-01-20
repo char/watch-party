@@ -2,8 +2,6 @@ import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { Peer } from "../common/peer.ts";
 import { ServerPacket, validateClientPacket } from "../common/proto.ts";
 import { WatchSession } from "./session.ts";
-// @ts-types="@char/aftercare"
-import { safely } from "@char/aftercare";
 
 export interface SessionConnection {
   id: string;
@@ -57,9 +55,15 @@ export function handleConnection(
   };
   const onMessage = (frame: Uint8Array) => {
     const packet = frame
-      .pipe(it => safely(decodeCbor)(it)[0] as object)
-      ?.pipe(validateClientPacket)
-      ?.pipe(it => it.value);
+      .$pipe(it => {
+        try {
+          return decodeCbor(it) as object;
+        } catch {
+          return undefined;
+        }
+      })
+      ?.$pipe(validateClientPacket)
+      ?.$pipe(it => it.value);
     if (!packet) return;
 
     connection.lastKeepalive = Date.now();
