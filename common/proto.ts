@@ -1,5 +1,6 @@
 import * as j from "@char/justin";
 import { PlaylistItemSchema } from "./playlist.ts";
+import { RoomConfigSchema } from "./room-config.ts";
 
 const ConnectionIdSchema = j.string;
 
@@ -17,6 +18,8 @@ const HandshakeSchema = j.obj({
   paused: j.boolean,
   playhead: j.number,
   playheadTimestamp: j.number,
+
+  roomConfig: RoomConfigSchema,
 });
 
 const PeerAddedSchema = j.obj({

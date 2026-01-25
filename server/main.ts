@@ -4,6 +4,7 @@ import * as j from "@char/justin";
 import { Application, HttpError, Router, Status } from "@oak/oak";
 
 import { PlaylistItemSchema } from "../common/playlist.ts";
+import { RoomConfigSchema } from "../common/room-config.ts";
 import { handleConnection, SessionConnection } from "./connection.ts";
 import { WatchSession } from "./session.ts";
 import { apiHandler } from "./util/api.ts";
@@ -69,6 +70,7 @@ router.put(
       body: j.obj({
         id: j.string.$pipe(j.optional),
         playlist: PlaylistItemSchema.$pipe(j.array).$pipe(j.optional),
+        config: RoomConfigSchema.$pipe(j.optional),
       }),
     },
     (_ctx, { body }) => {
@@ -77,6 +79,7 @@ router.put(
       const session = new WatchSession(id);
       if (body.playlist) session.playlist = body.playlist;
       if (session.playlist.length) session.playlistIndex = 0;
+      if (body.config) session.roomConfig = body.config;
       return session.info();
     },
   ),

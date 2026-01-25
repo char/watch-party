@@ -46,6 +46,7 @@ export function handleConnection(
       paused: session.paused,
       playhead: session.playhead(now),
       playheadTimestamp: now.epochMilliseconds,
+      roomConfig: session.roomConfig,
     });
 
     send({

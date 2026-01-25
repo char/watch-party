@@ -2,6 +2,7 @@ import { decode as decodeCbor, encode as encodeCbor } from "@atcute/cbor";
 import { LazySignal } from "../../common/lazy-signal.ts";
 import { Peer } from "../../common/peer.ts";
 import { ClientPacket, ServerPacket, validateServerPacket } from "../../common/proto.ts";
+import { RoomConfig } from "../../common/room-config.ts";
 import { BasicSignalHandler } from "../signals.ts";
 import { app, UserInfo } from "./app.ts";
 import { PlayheadOverride, PlaylistChange, VideoState } from "./video-state.ts";
@@ -36,6 +37,8 @@ export class SessionConnection extends BasicSignalHandler {
 
   resumptionToken: string;
 
+  roomConfig: RoomConfig;
+
   constructor(
     public socket: WebSocket,
     handshakePacket: ServerPacket<"Handshake">,
@@ -43,6 +46,7 @@ export class SessionConnection extends BasicSignalHandler {
     super();
 
     this.resumptionToken = handshakePacket.resumptionToken;
+    this.roomConfig = handshakePacket.roomConfig;
 
     this.user = {
       connectionId: handshakePacket.connectionId,
@@ -72,6 +76,8 @@ export class SessionConnection extends BasicSignalHandler {
       handshakePacket.playhead,
       handshakePacket.paused,
     );
+
+    if (this.roomConfig.autoLock) app.locked.set(true);
 
     this.#handlePeerListChanges();
     this.#handlePlayheadChanges();

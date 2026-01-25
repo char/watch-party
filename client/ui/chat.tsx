@@ -81,6 +81,16 @@ export class ChatWindow {
         </article>,
       );
     });
+
+    if (this.session.roomConfig.autoLock) {
+      this.append(
+        <article class="system">
+          video controls were <strong>automatically locked.</strong>
+          <br />
+          you may unlock them via the chat command <strong>/lock</strong>.
+        </article>,
+      );
+    }
   }
 
   append(message: Element) {

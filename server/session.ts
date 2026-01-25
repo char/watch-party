@@ -3,6 +3,7 @@ import { encode as encodeCbor } from "@atcute/cbor";
 import { Peer } from "../common/peer.ts";
 import { PlaylistItem } from "../common/playlist.ts";
 import { ChatFacet, ServerPacket } from "../common/proto.ts";
+import { RoomConfig } from "../common/room-config.ts";
 import { SessionConnection } from "./connection.ts";
 
 export class WatchSession {
@@ -19,6 +20,8 @@ export class WatchSession {
 
   playlist: PlaylistItem[] = [];
   playlistIndex: number = -1;
+
+  roomConfig: RoomConfig = {};
 
   lastPlayhead: number = 0; // milliseconds
   playedAt: Temporal.Instant | undefined = undefined;

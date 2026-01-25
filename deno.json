@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "client:build": "deno run -A @char/aftercare/bundle -i ./client/main.ts -i ./client/main-create.ts -o ./web/dist",
+    "client:build": "deno run -A @char/aftercare/bundle -i ./client/main.ts -o ./web/dist",
     "client:watch": "deno task client:build --watch",
     "server:start": "deno run -A --unstable-temporal ./server/main.ts",
     "server:watch": "deno run -A --unstable-temporal --watch ./server/main.ts",
