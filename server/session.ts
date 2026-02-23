@@ -1,8 +1,7 @@
 import { encode as encodeCbor } from "@atcute/cbor";
 
-import { Peer } from "../common/peer.ts";
 import { PlaylistItem } from "../common/playlist.ts";
-import { ChatFacet, ServerPacket } from "../common/proto.ts";
+import { ServerPacket } from "../common/proto.ts";
 import { RoomConfig } from "../common/room-config.ts";
 import { SessionConnection } from "./connection.ts";
 
@@ -11,12 +10,7 @@ export class WatchSession {
 
   connections: SessionConnection[] = [];
 
-  chatHistory: {
-    from: Peer;
-    text: string;
-    facets: ChatFacet[];
-    system: boolean;
-  }[] = [];
+  chatHistory: ServerPacket<"ChatHistory">["messages"] = [];
 
   playlist: PlaylistItem[] = [];
   playlistIndex: number = -1;
@@ -94,7 +88,13 @@ export class WatchSession {
       type: "PeerAdded",
       ...connection.peer,
     });
-    this.chatHistory.push({ from: connection.peer, text: "joined", facets: [], system: true });
+    this.chatHistory.push({
+      from: connection.peer,
+      text: "joined",
+      facets: [],
+      system: true,
+      timestamp: Date.now(),
+    });
   }
 
   dropPeer(
@@ -108,6 +108,7 @@ export class WatchSession {
       text: "left",
       facets: [],
       system: true,
+      timestamp: Date.now(),
     });
   }
 }

@@ -22,13 +22,17 @@ function ChatMessage(
   text: string,
   _facets: ServerPacket<"ChatMessage">["facets"],
   systemMessage?: boolean,
+  timestamp?: number,
 ): Element {
   const message = <article className={systemMessage ? "system" : undefined} />;
 
+  // TODO: better timestamp humanization
+
   message.append(
     <strong
-      _also={it => (it.style.color = from.displayColor)}
+      style={{ color: from.displayColor }}
       dataset={{ peer: from.connectionId }}
+      title={timestamp !== undefined ? new Date(timestamp).toLocaleString() : undefined}
     >
       {from.nickname}
     </strong>,
@@ -208,7 +212,7 @@ export class ChatWindow {
       if (packet.type !== "ChatMessage") return;
       const peer = this.session.peers.get(packet.from);
       if (!peer) return;
-      this.append(ChatMessage(peer, packet.text, packet.facets));
+      this.append(ChatMessage(peer, packet.text, packet.facets, false, packet.timestamp));
     });
   }
 
@@ -282,7 +286,15 @@ export class ChatWindow {
       this.messages.querySelector("#history")?.remove();
       const history = <div id="history" />;
       for (const message of packet.messages) {
-        history.append(ChatMessage(message.from, message.text, message.facets, message.system));
+        history.append(
+          ChatMessage(
+            message.from,
+            message.text,
+            message.facets,
+            message.system,
+            message.timestamp,
+          ),
+        );
       }
 
       const scrolledToBottom =

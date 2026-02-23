@@ -102,13 +102,15 @@ export function handleConnection(
       }
 
       case "ChatMessage": {
+        const timestamp = Date.now();
         session.chatHistory.push({
           from: connection.peer,
           text: packet.text,
           facets: packet.facets,
           system: false,
+          timestamp,
         });
-        session.broadcast({ ...packet, type: "ChatMessage", from: connection.id });
+        session.broadcast({ ...packet, type: "ChatMessage", from: connection.id, timestamp });
         break;
       }
 

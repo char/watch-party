@@ -119,7 +119,7 @@ const ChatMessageSchema = j.obj({
   facets: ChatFacetSchema.$pipe(j.array),
 });
 
-const ServerChatMessageSchema = j.obj({ ...ChatMessageSchema.shape, from: ConnectionIdSchema });
+const ServerChatMessageSchema = j.obj({ ...ChatMessageSchema.shape, from: ConnectionIdSchema, timestamp: j.number });
 
 const ChatHistorySchema = j.obj({
   type: j.literal("ChatHistory"),
@@ -133,6 +133,7 @@ const ChatHistorySchema = j.obj({
       text: j.string,
       facets: ChatFacetSchema.$pipe(j.array),
       system: j.boolean,
+      timestamp: j.number,
     })
     .$pipe(j.array),
 });
