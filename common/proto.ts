@@ -98,6 +98,11 @@ const ServerPlaylistUpdateSchema = j.obj({
   from: j.optional(ConnectionIdSchema),
 });
 
+const RoomConfigUpdateSchema = j.obj({
+  type: j.literal("RoomConfigUpdate"),
+  roomConfig: RoomConfigSchema,
+});
+
 const facetSpan = <const Shape extends Record<string, j.AnySchema>>(
   it: j.ObjectSchema<Shape>,
 ) => j.obj({ ...it.shape, start: j.number, end: j.number });
@@ -119,7 +124,11 @@ const ChatMessageSchema = j.obj({
   facets: ChatFacetSchema.$pipe(j.array),
 });
 
-const ServerChatMessageSchema = j.obj({ ...ChatMessageSchema.shape, from: ConnectionIdSchema, timestamp: j.number });
+const ServerChatMessageSchema = j.obj({
+  ...ChatMessageSchema.shape,
+  from: ConnectionIdSchema,
+  timestamp: j.number,
+});
 
 const ChatHistorySchema = j.obj({
   type: j.literal("ChatHistory"),
@@ -162,6 +171,7 @@ export const ServerPacketSchema = j.discriminatedUnion("type", [
   ChatHistorySchema,
   ServerReportPlayheadSchema,
   ServerPlaylistUpdateSchema,
+  RoomConfigUpdateSchema,
 ]);
 export const validateServerPacket = j.compile(ServerPacketSchema);
 

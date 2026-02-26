@@ -80,9 +80,27 @@ router.put(
       if (body.playlist) session.playlist = body.playlist;
       if (session.playlist.length) session.playlistIndex = 0;
       if (body.config) session.roomConfig = body.config;
-      return session.info();
+      return { ...session.info(), editToken: session.editToken };
     },
   ),
+);
+
+router.patch(
+  "/api/session/:session/config",
+  apiHandler({ body: RoomConfigSchema }, (ctx, { body }) => {
+    const session = WatchSession.SESSIONS.get(ctx.params.session);
+    if (!session) {
+      throw new HTTPError(Status.NotFound, "no session found with given ID");
+    }
+    const auth = ctx.request.headers.get("Authorization");
+    const token = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
+    if (token !== session.editToken) {
+      throw new HTTPError(Status.Unauthorized, "invalid edit token");
+    }
+    session.roomConfig = body;
+    session.broadcast({ type: "RoomConfigUpdate", roomConfig: body });
+    return { ok: true };
+  }),
 );
 
 router.get("/:path*", async ctx => {

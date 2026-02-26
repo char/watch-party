@@ -182,6 +182,42 @@ export class ChatWindow {
         document.querySelector("main")!.append(appendDialog);
         break;
       }
+      case "edit-auth": {
+        const token = args[1];
+        if (!token) {
+          this.append(<article className="system">usage: /edit-auth [token]</article>);
+          break;
+        }
+        app.localEditToken.set(token);
+        this.append(<article className="system">edit token set.</article>);
+        break;
+      }
+      case "toggle-autolock": {
+        const token = app.localEditToken.get();
+        if (!token) {
+          this.append(
+            <article className="system">
+              no edit token set. use <strong>/edit-auth [token]</strong> first.
+            </article>,
+          );
+          break;
+        }
+        const newAutoLock = !this.session.roomConfig.autoLock;
+        fetch(`/api/session/${this.session.video.id}/config`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ...this.session.roomConfig, autoLock: newAutoLock }),
+        }).then(async res => {
+          if (!res.ok) {
+            const { error } = await res.json().catch(() => ({ error: res.statusText }));
+            this.append(<article className="system">failed to update config: {error}</article>);
+          }
+        });
+        break;
+      }
       case "help": {
         this.append(
           <article>

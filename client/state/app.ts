@@ -17,6 +17,7 @@ let connecting = false;
 
 export const app = {
   locked: new Signal(false),
+  localEditToken: new Signal<string | undefined>(undefined),
 
   user: new Signal<UserInfo | undefined>(undefined).$tap(s => {
     const nickname = localStorage.getItem("watch-party/last-nickname") ?? undefined;

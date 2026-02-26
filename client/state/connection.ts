@@ -83,6 +83,7 @@ export class SessionConnection extends BasicSignalHandler {
     this.#handlePlayheadChanges();
     this.#handlePlayheadReports();
     this.#handlePlaylistUpdates();
+    this.#handleRoomConfigUpdates();
   }
   send(packet: ClientPacket) {
     this.socket.send(encodeCbor(packet));
@@ -165,6 +166,13 @@ export class SessionConnection extends BasicSignalHandler {
         packet.playlist,
         packet.playlistIndex,
       );
+    });
+  }
+
+  #handleRoomConfigUpdates() {
+    this.on(ReceivedPacket, ({ packet }) => {
+      if (packet.type !== "RoomConfigUpdate") return;
+      this.roomConfig = packet.roomConfig;
     });
   }
 }

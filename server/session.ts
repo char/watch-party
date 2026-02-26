@@ -4,6 +4,7 @@ import { PlaylistItem } from "../common/playlist.ts";
 import { ServerPacket } from "../common/proto.ts";
 import { RoomConfig } from "../common/room-config.ts";
 import { SessionConnection } from "./connection.ts";
+import { randomBase32 } from "./util/base32.ts";
 
 export class WatchSession {
   static SESSIONS = new Map<string, WatchSession>();
@@ -16,6 +17,7 @@ export class WatchSession {
   playlistIndex: number = -1;
 
   roomConfig: RoomConfig = {};
+  editToken: string = randomBase32(24);
 
   lastPlayhead: number = 0; // milliseconds
   playedAt: Temporal.Instant | undefined = undefined;
