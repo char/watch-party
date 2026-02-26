@@ -5,7 +5,9 @@ import { PlaylistItem } from "../../common/playlist.ts";
 import { bindValue, onEvent } from "../util.ts";
 import { MirrorsContainer, SubtitlesContainer } from "./playlist-editing.tsx";
 
-export const createCreationForm = (createCallback: (id: string) => void) => {
+export const createCreationForm = (
+  createCallback: (id: string, editToken?: string) => void,
+) => {
   const id = new Signal("");
   const video = new Signal("");
 
@@ -38,7 +40,7 @@ export const createCreationForm = (createCallback: (id: string) => void) => {
         const validateInfo = j.compile(InfoSchema);
         const { value: info, errors } = validateInfo(await response.json());
         if (errors) throw new Error("failed to parse session info: " + JSON.stringify(errors));
-        createCallback(info.id);
+        createCallback(info.id, "editToken" in info ? (info.editToken as string) : undefined);
       })}
       id="create-form"
     >

@@ -10,8 +10,10 @@ import { createPlayer } from "./ui/player.tsx";
 const main = document.querySelector("main")!;
 
 const connectForm = createConnectForm();
-const creationForm = createCreationForm(id => {
+const creationForm = createCreationForm((id, editToken) => {
   app.sessionId.set(id);
+  app.localEditToken.set(editToken);
+
   creationForm.remove();
   main.append(connectForm);
 });
