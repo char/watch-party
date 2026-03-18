@@ -24,7 +24,7 @@ function ChatMessage(
   systemMessage?: boolean,
   timestamp?: number,
 ): Element {
-  const message = <article className={systemMessage ? "system" : undefined} />;
+  const message = <article class={systemMessage ? "system" : undefined} />;
 
   // TODO: better timestamp humanization
 
@@ -75,12 +75,12 @@ export class ChatWindow {
     });
 
     this.session.video.on(Reconnected, () => {
-      this.append(<article className="system">Reconnected after losing connection.</article>);
+      this.append(<article class="system">Reconnected after losing connection.</article>);
     });
 
     this.session.video.on(LostConnection, () => {
       this.append(
-        <article className="system danger">
+        <article class="system danger">
           <strong>You lost connection.</strong> Please refresh the page.
         </article>,
       );
@@ -138,7 +138,7 @@ export class ChatWindow {
       case "lock": {
         app.locked.set(!app.locked.get());
         this.append(
-          <article className="system">
+          <article class="system">
             playback controls are{" "}
             {app.locked.get() ? <strong>now</strong> : <strong>no longer</strong>} locked.
           </article>,
@@ -165,7 +165,7 @@ export class ChatWindow {
         }
 
         this.append(
-          <article className="system">
+          <article class="system">
             tweaked subtitle delay by <strong>{milliseconds.toFixed(0)}ms</strong>.
           </article>,
         );
@@ -185,18 +185,18 @@ export class ChatWindow {
       case "edit-auth": {
         const token = args[1];
         if (!token) {
-          this.append(<article className="system">usage: /edit-auth [token]</article>);
+          this.append(<article class="system">usage: /edit-auth [token]</article>);
           break;
         }
         app.localEditToken.set(token);
-        this.append(<article className="system">edit token set.</article>);
+        this.append(<article class="system">edit token set.</article>);
         break;
       }
       case "toggle-autolock": {
         const token = app.localEditToken.get();
         if (!token) {
           this.append(
-            <article className="system">
+            <article class="system">
               no edit token set. use <strong>/edit-auth [token]</strong> first.
             </article>,
           );
@@ -213,7 +213,7 @@ export class ChatWindow {
         }).then(async res => {
           if (!res.ok) {
             const { error } = await res.json().catch(() => ({ error: res.statusText }));
-            this.append(<article className="system">failed to update config: {error}</article>);
+            this.append(<article class="system">failed to update config: {error}</article>);
           }
         });
         break;
@@ -269,7 +269,7 @@ export class ChatWindow {
     this.session.video.on(PlayheadOverride, event => {
       if (event.originator === "server") {
         const msg = (
-          <article className="system playhead" dataset={{ fromServer: "" }}>
+          <article class="system playhead" dataset={{ fromServer: "" }}>
             you have been synced to {formatTime(event.playhead)}.
           </article>
         );

@@ -36,7 +36,7 @@ export function createPlayer(session: SessionConnection) {
   }
 
   const noCurrentVideo = (
-    <div className="video-status">There is no video currently playing.</div>
+    <div class="video-status">There is no video currently playing.</div>
   );
   let videoElement: HTMLMediaElement | undefined = undefined;
   const showVideo = ({ video: url, subtitles, isAudio }: PlaylistItem) => {

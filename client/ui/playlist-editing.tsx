@@ -20,7 +20,7 @@ export class MirrorsContainer {
   add() {
     const mirror = new Signal("");
     const group = (
-      <div className="group">
+      <div class="group">
         <input
           value={mirror}
           type="url"
@@ -33,7 +33,7 @@ export class MirrorsContainer {
             this.mirrors = this.mirrors.filter(it => it !== mirror);
             group.remove();
           })}
-          className="danger"
+          class="danger"
         >
           -
         </button>
@@ -69,7 +69,7 @@ export class SubtitlesContainer {
   add() {
     const subtitle = { name: new Signal(""), url: new Signal("") };
     const group = (
-      <div className="group">
+      <div class="group">
         <input
           value={subtitle.url}
           type="url"
@@ -84,7 +84,7 @@ export class SubtitlesContainer {
       group.remove();
     };
     group.append(
-      <button _also={onEvent("click", () => remove())} type="button" className="danger">
+      <button _also={onEvent("click", () => remove())} type="button" class="danger">
         -
       </button>,
     );

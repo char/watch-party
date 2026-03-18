@@ -54,7 +54,7 @@ export const createConnectForm = () => {
         />
         <button
           type="button"
-          className="color-swatch"
+          class="color-swatch"
           _also={btn => {
             displayColor.subscribeImmediate(v => {
               btn.style.backgroundColor = v;
@@ -77,12 +77,7 @@ export const createConnectForm = () => {
       </div>
 
       <label htmlFor="session-id">session id</label>
-      <input
-        value={app.sessionId}
-        id="session-id"
-        placeholder="{random string}"
-        required
-      />
+      <input value={app.sessionId} id="session-id" placeholder="{random string}" required />
 
       <button type="submit">join</button>
     </form>

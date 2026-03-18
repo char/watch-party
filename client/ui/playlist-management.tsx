@@ -8,7 +8,7 @@ export class PlaylistManagement {
   #playlistDisplay = (<div />);
 
   elem = (
-    <dialog className="playlist-management">
+    <dialog class="playlist-management">
       <h1>playlist</h1>
       <p>you can do the thingy</p>
       {this.#playlistDisplay}
@@ -101,7 +101,7 @@ export class PlaylistManagement {
             ""
           )}
 
-          <section className="controls">
+          <section class="controls">
             {active ? (
               ""
             ) : (
@@ -117,7 +117,7 @@ export class PlaylistManagement {
           </section>
         </summary>
 
-        <section className="edit">
+        <section class="edit">
           {mirrors.elem}
           {subtitles.elem}
 
