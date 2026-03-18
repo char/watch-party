@@ -54,23 +54,61 @@ main {
   }
 }
 
-input[type="color"] {
+.color-swatch {
+  anchor-name: --color-swatch;
   display: inline-block;
-  appearance: none;
-  border: none;
+  border: 2px solid;
   border-radius: 4px;
   padding: 0;
-  margin: 0.5em 0;
+  margin: 0;
   height: 2rem;
   width: 2.5rem;
   cursor: pointer;
+  transition: none;
+}
 
-  &::-moz-color-swatch,
-  &::-webkit-color-swatch,
-  &::-webkit-color-swatch-wrapper {
-    border: none;
-    margin: 0;
-    padding: 0;
+.color-swatch + dialog {
+  position-anchor: --color-swatch;
+  position-area: bottom left;
+  position-try: bottom top;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  max-width: none;
+  background: transparent;
+  border: none;
+  overflow: visible;
+
+  &::backdrop {
+    background: transparent;
+  }
+}
+
+hex-input {
+  display: inline-block;
+  height: 2rem;
+  width: 6rem;
+
+  &::part(input) {
+    background-color: rgb(var(--color-bg) / 1);
+    color: rgb(var(--color-fg) / 1);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    padding: 0 0.5em;
+    border: 1px solid rgb(var(--color-fg) / 0.25);
+    border-radius: var(--border-radius);
+    outline: none;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
+
+    &:focus {
+      border-color: rgb(var(--color-accent) / 1);
+      box-shadow: 0 0 0 0.2rem rgb(var(--color-accent) / 0.25);
+    }
   }
 }
 
