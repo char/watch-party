@@ -87,7 +87,7 @@ main {
 hex-input {
   display: inline-block;
   height: 2rem;
-  width: 6rem;
+  width: 4.5rem;
 
   &::part(input) {
     background-color: rgb(var(--color-bg) / 1);
@@ -104,6 +104,7 @@ hex-input {
     transition:
       border-color 0.15s ease-in-out,
       box-shadow 0.15s ease-in-out;
+    text-align: center;
 
     &:focus {
       border-color: rgb(var(--color-accent) / 1);
