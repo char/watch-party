@@ -14,7 +14,7 @@ import {
   PlaylistChange,
   Reconnected,
 } from "../state/video-state.ts";
-import { bindValue, formatTime, onEvent } from "../util.ts";
+import { formatTime, onEvent } from "../util.ts";
 import { createPlaylistAppendForm } from "./append-to-playlist.tsx";
 
 function ChatMessage(
@@ -363,7 +363,7 @@ export class ChatWindow {
         })}
       >
         <input
-          _also={bindValue(messageToSend)}
+          value={messageToSend}
           type="text"
           placeholder="message (or /help for commands)"
         />

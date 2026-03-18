@@ -2,7 +2,7 @@ import { Signal } from "@char/aftercare";
 import * as j from "@char/justin";
 
 import { PlaylistItem } from "../../common/playlist.ts";
-import { bindValue, onEvent } from "../util.ts";
+import { onEvent } from "../util.ts";
 import { MirrorsContainer, SubtitlesContainer } from "./playlist-editing.tsx";
 
 export const createCreationForm = (
@@ -47,11 +47,11 @@ export const createCreationForm = (
       <label htmlFor="session-id">
         id <small>(leave blank to generate random)</small>
       </label>
-      <input _also={bindValue(id)} id="session-id" placeholder="my-movie" />
+      <input value={id} id="session-id" placeholder="my-movie" />
 
       <label htmlFor="video-url">video URL</label>
       <input
-        _also={bindValue(video)}
+        value={video}
         id="video-url"
         type="url"
         placeholder="https://example.com/my-movie.mp4"

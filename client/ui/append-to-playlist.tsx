@@ -1,6 +1,5 @@
 import { Signal } from "@char/aftercare";
 import { SessionConnection } from "../state/connection.ts";
-import { bindValue } from "../util.ts";
 import { MirrorsContainer, SubtitlesContainer } from "./playlist-editing.tsx";
 
 export function createPlaylistAppendForm(session: SessionConnection) {
@@ -24,7 +23,7 @@ export function createPlaylistAppendForm(session: SessionConnection) {
     <form _onsubmit={submit}>
       <label htmlFor="video-url">video URL</label>
       <input
-        _also={bindValue(video)}
+        value={video}
         id="video-url"
         type="url"
         placeholder="https://example.com/my-movie.mp4"

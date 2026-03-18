@@ -2,7 +2,7 @@ import { Signal } from "@char/aftercare";
 import "vanilla-colorful/hex-color-picker.js";
 import "vanilla-colorful/hex-input.js";
 import { app } from "../state/app.ts";
-import { bindValue, onEvent } from "../util.ts";
+import { onEvent } from "../util.ts";
 
 export type ConnectCallback = (sessionId: string, nickname: string) => void;
 
@@ -40,7 +40,7 @@ export const createConnectForm = () => {
       id="connect-form"
     >
       <label htmlFor="nickname">nickname</label>
-      <input _also={bindValue(nickname)} id="nickname" placeholder="nickname" required />
+      <input value={nickname} id="nickname" placeholder="nickname" required />
 
       <label>display name color</label>
       <div class="group" style={{ gap: "0.5em" }}>
@@ -78,7 +78,7 @@ export const createConnectForm = () => {
 
       <label htmlFor="session-id">session id</label>
       <input
-        _also={bindValue(app.sessionId)}
+        value={app.sessionId}
         id="session-id"
         placeholder="{random string}"
         required

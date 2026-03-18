@@ -1,6 +1,6 @@
 import { Signal } from "@char/aftercare";
 import { PlaylistItem } from "../../common/playlist.ts";
-import { bindValue, onEvent } from "../util.ts";
+import { onEvent } from "../util.ts";
 
 export class MirrorsContainer {
   addButton = (<button type="button">add mirror</button>);
@@ -22,7 +22,7 @@ export class MirrorsContainer {
     const group = (
       <div className="group">
         <input
-          _also={bindValue(mirror)}
+          value={mirror}
           type="url"
           placeholder="https://…/my-video.mp4"
           required
@@ -71,12 +71,12 @@ export class SubtitlesContainer {
     const group = (
       <div className="group">
         <input
-          _also={bindValue(subtitle.url)}
+          value={subtitle.url}
           type="url"
           placeholder="https://…/my-subs.vtt"
           required
         />
-        <input _also={bindValue(subtitle.name)} placeholder="English" />
+        <input value={subtitle.name} placeholder="English" />
       </div>
     );
     const remove = () => {
