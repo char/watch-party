@@ -53,7 +53,7 @@ export class MirrorsContainer {
 
 export class SubtitlesContainer {
   addButton = (<button type="button">add</button>);
-  elem = (<div _also={it => (it.style.display = "contents")} />);
+  elem = (<div style={{ display: "contents" }} />);
 
   subtitles: { name: Signal<string>; url: Signal<string> }[] = [];
 

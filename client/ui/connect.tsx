@@ -67,9 +67,9 @@ export const createConnectForm = () => {
         {` `}
         <span>
           <strong
+            style={{ color: displayColor }}
             _also={s => {
               nickname.subscribeImmediate(v => (s.textContent = v));
-              displayColor.subscribeImmediate(v => (s.style.color = v));
             }}
           />
           : my message

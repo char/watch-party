@@ -119,7 +119,7 @@ export class ChatWindow {
           list.append(
             <li>
               <strong
-                _also={it => (it.style.color = peer.displayColor)}
+                style={{ color: peer.displayColor }}
                 dataset={{ peer: peer.connectionId }}
               >
                 {peer.nickname}
