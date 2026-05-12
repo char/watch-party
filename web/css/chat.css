@@ -10,7 +10,7 @@
 
     max-height: calc(-4em + 100vh);
     overflow-y: scroll;
-    padding-bottom: 1em;
+    padding: 0 1em 1em 1em;
 
     article {
       margin: 0;
@@ -48,6 +48,8 @@
 }
 
 #chat-form {
+  padding: 0 1em;
+
   input {
     width: calc(100%);
     border-radius: 0;

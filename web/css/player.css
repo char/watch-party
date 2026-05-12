@@ -57,9 +57,8 @@
     flex-basis: var(--chat-width);
     min-width: var(--chat-width);
 
-    padding: 1em;
+    padding: 0.5em 0 1em 0;
     margin-left: -0.5em;
-    padding-top: 0.5em;
   }
 }
 
