@@ -35,9 +35,7 @@ export function createPlayer(session: SessionConnection) {
     });
   }
 
-  const noCurrentVideo = (
-    <div class="video-status">There is no video currently playing.</div>
-  );
+  const noCurrentVideo = <div class="video-status">There is no video currently playing.</div>;
   let videoElement: HTMLMediaElement | undefined = undefined;
   const showVideo = ({ video: url, subtitles, isAudio }: PlaylistItem) => {
     noCurrentVideo.remove();

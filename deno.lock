@@ -30,6 +30,7 @@
     "npm:esbuild@0.24": "0.24.2",
     "npm:esbuild@0.27.2": "0.27.2",
     "npm:path-to-regexp@^6.3.0": "6.3.0",
+    "npm:prettier@*": "3.5.1",
     "npm:vanilla-colorful@~0.7.2": "0.7.2"
   },
   "jsr": {
@@ -488,6 +489,10 @@
     },
     "path-to-regexp@6.3.0": {
       "integrity": "sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ=="
+    },
+    "prettier@3.5.1": {
+      "integrity": "sha512-hPpFQvHwL3Qv5AdRvBFMhnKo4tYxp0ReXiPn2bxkiohEX6mBeBwEpBSQTkD458RaaDKQMYSp4hX4UtfUTA5wDw==",
+      "bin": true
     },
     "vanilla-colorful@0.7.2": {
       "integrity": "sha512-z2YZusTFC6KnLERx1cgoIRX2CjPRP0W75N+3CC6gbvdX5Ch47rZkEMGO2Xnf+IEmi3RiFLxS18gayMA27iU7Kg=="

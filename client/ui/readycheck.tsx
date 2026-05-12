@@ -70,24 +70,21 @@ export class ReadyCheckEmbed {
     this.voteId = opts.voteId;
 
     this.#yesBtn = (
-      <button
-        type="button"
-        class="yes"
-        _also={onEvent("click", () => this.vote("yes"))}
-      >
+      <button type="button" class="yes" _also={onEvent("click", () => this.vote("yes"))}>
         yes
       </button>
     ) as HTMLButtonElement;
     this.#noBtn = (
-      <button
-        type="button"
-        class="no"
-        _also={onEvent("click", () => this.vote("no"))}
-      >
+      <button type="button" class="no" _also={onEvent("click", () => this.vote("no"))}>
         no
       </button>
     ) as HTMLButtonElement;
-    this.#buttons = <div class="buttons">{this.#yesBtn}{this.#noBtn}</div>;
+    this.#buttons = (
+      <div class="buttons">
+        {this.#yesBtn}
+        {this.#noBtn}
+      </div>
+    );
     if (opts.amInitiator) {
       this.#endEarlyBtn = (
         <button

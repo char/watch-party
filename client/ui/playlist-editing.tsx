@@ -21,12 +21,7 @@ export class MirrorsContainer {
     const mirror = new Signal("");
     const group = (
       <div class="group">
-        <input
-          value={mirror}
-          type="url"
-          placeholder="https://…/my-video.mp4"
-          required
-        />
+        <input value={mirror} type="url" placeholder="https://…/my-video.mp4" required />
         <button
           type="button"
           _also={onEvent("click", () => {
@@ -70,12 +65,7 @@ export class SubtitlesContainer {
     const subtitle = { name: new Signal(""), url: new Signal("") };
     const group = (
       <div class="group">
-        <input
-          value={subtitle.url}
-          type="url"
-          placeholder="https://…/my-subs.vtt"
-          required
-        />
+        <input value={subtitle.url} type="url" placeholder="https://…/my-subs.vtt" required />
         <input value={subtitle.name} placeholder="English" />
       </div>
     );

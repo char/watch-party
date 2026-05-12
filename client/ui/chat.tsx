@@ -200,17 +200,14 @@ export class ChatWindow {
           this.session.send({ type: "ReadyCheckStart" });
           break;
         }
-        const vote = arg === "y" || arg === "yes" ? "yes"
-          : arg === "n" || arg === "no" ? "no"
-          : undefined;
+        const vote =
+          arg === "y" || arg === "yes" ? "yes" : arg === "n" || arg === "no" ? "no" : undefined;
         if (vote === undefined) {
-          this.append(
-            <article class="system">usage: /rc, /rc [y|yes], or /rc [n|no]</article>,
-          );
+          this.append(<article class="system">usage: /rc, /rc [y|yes], or /rc [n|no]</article>);
           break;
         }
-        const active = this.#activeReadyCheckId
-          && this.#readyChecks.get(this.#activeReadyCheckId);
+        const active =
+          this.#activeReadyCheckId && this.#readyChecks.get(this.#activeReadyCheckId);
         if (!active) {
           this.append(<article class="system">no active ready check.</article>);
           break;
@@ -416,8 +413,7 @@ export class ChatWindow {
         case "ReadyCheckComplete": {
           this.#readyChecks.get(packet.voteId)?.complete();
           this.#readyChecks.delete(packet.voteId);
-          if (this.#activeReadyCheckId === packet.voteId)
-            this.#activeReadyCheckId = undefined;
+          if (this.#activeReadyCheckId === packet.voteId) this.#activeReadyCheckId = undefined;
           break;
         }
       }
