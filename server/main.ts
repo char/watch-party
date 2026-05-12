@@ -1,7 +1,7 @@
 import "../common/pipe.ts";
 
 import * as j from "@char/justin";
-import { Application, HttpError, Router, Status } from "@oak/oak";
+import { Application, HttpError, RouteParams, Router, RouterContext, Status } from "@oak/oak";
 
 import { PlaylistItemSchema } from "../common/playlist.ts";
 import { RoomConfigSchema } from "../common/room-config.ts";
@@ -87,6 +87,7 @@ router.put(
 
 router.patch(
   "/api/session/:session/config",
+  (_c, next) => next(), // if i dont have this empty guy the type inference fails on apiHandler for some reason
   apiHandler({ body: RoomConfigSchema }, (ctx, { body }) => {
     const session = WatchSession.SESSIONS.get(ctx.params.session);
     if (!session) {

@@ -16,6 +16,12 @@ import {
 } from "../state/video-state.ts";
 import { formatTime, onEvent } from "../util.ts";
 import { createPlaylistAppendForm } from "./append-to-playlist.tsx";
+import {
+  createReadyCheckAudio,
+  playReadyCheckSound,
+  preloadVoteSounds,
+  ReadyCheckEmbed,
+} from "./readycheck.tsx";
 
 function ChatMessage(
   from: Peer,
@@ -53,6 +59,10 @@ export class ChatWindow {
 
   #lastMessage: Element | undefined;
 
+  #readyCheckAudio = createReadyCheckAudio();
+  #readyChecks = new Map<string, ReadyCheckEmbed>();
+  #activeReadyCheckId: string | undefined;
+
   constructor(public session: SessionConnection) {
     this.messages = <div id="chat-messages"></div>;
 
@@ -67,6 +77,7 @@ export class ChatWindow {
     this.#handleJoinLeave();
     this.#handlePlayheadOverride();
     this.#handleChatHistory();
+    this.#handleReadyCheck();
 
     // todo: extract to handle func
     this.session.video.on(PlaylistChange, ev => {
@@ -182,6 +193,31 @@ export class ChatWindow {
         document.querySelector("main")!.append(appendDialog);
         break;
       }
+      case "readycheck":
+      case "rc": {
+        const arg = args[1]?.toLowerCase();
+        if (arg === undefined) {
+          this.session.send({ type: "ReadyCheckStart" });
+          break;
+        }
+        const vote = arg === "y" || arg === "yes" ? "yes"
+          : arg === "n" || arg === "no" ? "no"
+          : undefined;
+        if (vote === undefined) {
+          this.append(
+            <article class="system">usage: /rc, /rc [y|yes], or /rc [n|no]</article>,
+          );
+          break;
+        }
+        const active = this.#activeReadyCheckId
+          && this.#readyChecks.get(this.#activeReadyCheckId);
+        if (!active) {
+          this.append(<article class="system">no active ready check.</article>);
+          break;
+        }
+        active.vote(vote);
+        break;
+      }
       case "edit-auth": {
         const token = args[1];
         if (!token) {
@@ -234,6 +270,10 @@ export class ChatWindow {
               </li>
               <li>
                 <kbd>/subdelay [ms]</kbd> - bump subtitle delay (positive = later)
+              </li>
+              <li>
+                <kbd>/readycheck</kbd> (or <kbd>/rc</kbd>) - start a 30-second ready check;{" "}
+                <kbd>/rc [y|n]</kbd> to vote on an active one
               </li>
             </ul>
           </article>,
@@ -311,6 +351,75 @@ export class ChatWindow {
         this.#lastMessage = msg;
       } else {
         this.append(msg);
+      }
+    });
+  }
+
+  #handleReadyCheck() {
+    this.session.on(ReceivedPacket, ({ packet }) => {
+      switch (packet.type) {
+        case "ReadyCheckStarted": {
+          const initiator = this.session.peers.get(packet.from);
+          if (!initiator) return;
+          const participants = packet.participants
+            .map(id => this.session.peers.get(id))
+            .filter((p): p is NonNullable<typeof p> => p !== undefined);
+          const selfId = this.session.user.connectionId;
+          const amInitiator = packet.from === selfId;
+          const voteId = packet.voteId;
+
+          const embed = new ReadyCheckEmbed({
+            voteId,
+            initiator,
+            participants,
+            endsAt: packet.endsAt,
+            selfId,
+            amInitiator,
+            onVote: vote => {
+              this.session.send({ type: "ReadyCheckVote", voteId, vote });
+              playReadyCheckSound(
+                vote === "yes" ? this.#readyCheckAudio.yes : this.#readyCheckAudio.no,
+              );
+            },
+            onEndEarly: () => {
+              const token = embed.managementToken;
+              if (!token) return;
+              this.session.send({
+                type: "ReadyCheckTerminate",
+                voteId,
+                managementToken: token,
+              });
+            },
+          });
+
+          this.#readyChecks.set(voteId, embed);
+          this.#activeReadyCheckId = voteId;
+          this.append(embed.elem);
+          playReadyCheckSound(this.#readyCheckAudio.started);
+          preloadVoteSounds(this.#readyCheckAudio);
+          break;
+        }
+        case "ReadyCheckManagement": {
+          this.#readyChecks.get(packet.voteId)?.setManagementToken(packet.managementToken);
+          break;
+        }
+        case "ReadyCheckVote": {
+          this.#readyChecks.get(packet.voteId)?.recordVote(packet.from, packet.vote);
+          break;
+        }
+        case "ReadyCheckAbstain": {
+          this.#readyChecks.get(packet.voteId)?.recordVote(packet.peer, "abstain");
+          if (packet.peer === this.session.user.connectionId)
+            playReadyCheckSound(this.#readyCheckAudio.no);
+          break;
+        }
+        case "ReadyCheckComplete": {
+          this.#readyChecks.get(packet.voteId)?.complete();
+          this.#readyChecks.delete(packet.voteId);
+          if (this.#activeReadyCheckId === packet.voteId)
+            this.#activeReadyCheckId = undefined;
+          break;
+        }
       }
     });
   }

@@ -170,6 +170,21 @@ export function handleConnection(
 
         break;
       }
+
+      case "ReadyCheckStart": {
+        session.startReadyCheck(connection);
+        break;
+      }
+
+      case "ReadyCheckVote": {
+        session.recordReadyCheckVote(connection, packet.voteId, packet.vote);
+        break;
+      }
+
+      case "ReadyCheckTerminate": {
+        session.terminateReadyCheck(packet.voteId, packet.managementToken);
+        break;
+      }
     }
   };
 

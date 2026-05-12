@@ -147,6 +147,47 @@ const ChatHistorySchema = j.obj({
     .$pipe(j.array),
 });
 
+const ReadyCheckVoteValueSchema = j.union(j.literal("yes"), j.literal("no"));
+
+const ReadyCheckStartSchema = j.obj({
+  type: j.literal("ReadyCheckStart"),
+});
+const ReadyCheckStartedSchema = j.obj({
+  type: j.literal("ReadyCheckStarted"),
+  voteId: j.string,
+  from: ConnectionIdSchema,
+  endsAt: j.number,
+  participants: j.array(ConnectionIdSchema),
+});
+const ReadyCheckManagementSchema = j.obj({
+  type: j.literal("ReadyCheckManagement"),
+  voteId: j.string,
+  managementToken: j.string,
+});
+const ReadyCheckVoteSchema = j.obj({
+  type: j.literal("ReadyCheckVote"),
+  voteId: j.string,
+  vote: ReadyCheckVoteValueSchema,
+});
+const ServerReadyCheckVoteSchema = j.obj({
+  ...ReadyCheckVoteSchema.shape,
+  from: ConnectionIdSchema,
+});
+const ReadyCheckTerminateSchema = j.obj({
+  type: j.literal("ReadyCheckTerminate"),
+  voteId: j.string,
+  managementToken: j.string,
+});
+const ReadyCheckAbstainSchema = j.obj({
+  type: j.literal("ReadyCheckAbstain"),
+  voteId: j.string,
+  peer: ConnectionIdSchema,
+});
+const ReadyCheckCompleteSchema = j.obj({
+  type: j.literal("ReadyCheckComplete"),
+  voteId: j.string,
+});
+
 export const ClientPacketSchema = j.discriminatedUnion("type", [
   LeaveSessionSchema,
   ChatMessageSchema,
@@ -158,6 +199,9 @@ export const ClientPacketSchema = j.discriminatedUnion("type", [
   RemoveFromPlaylistSchema,
   ChangePlaylistIndexSchema,
   EditPlaylistItemSchema,
+  ReadyCheckStartSchema,
+  ReadyCheckVoteSchema,
+  ReadyCheckTerminateSchema,
 ]);
 export const validateClientPacket = j.compile(ClientPacketSchema);
 
@@ -172,6 +216,11 @@ export const ServerPacketSchema = j.discriminatedUnion("type", [
   ServerReportPlayheadSchema,
   ServerPlaylistUpdateSchema,
   RoomConfigUpdateSchema,
+  ReadyCheckStartedSchema,
+  ReadyCheckManagementSchema,
+  ServerReadyCheckVoteSchema,
+  ReadyCheckAbstainSchema,
+  ReadyCheckCompleteSchema,
 ]);
 export const validateServerPacket = j.compile(ServerPacketSchema);
 

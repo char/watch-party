@@ -5,6 +5,9 @@
   --color-accent: 181 127 220;
   --color-accent-x: 161 86 214;
   --color-off-accent: 255 255 255;
+  --color-success: 76 175 80;
+  --color-fail: 229 57 53;
+  --color-neutral: 136 136 136;
   --alpha-text: 1;
 }
 

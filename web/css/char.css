@@ -11,6 +11,9 @@
   --color-accent: 252 91 205;
   --color-off-accent: var(--color-bg);
   --color-accent-x: 242 59 199;
+  --color-success: 76 175 80;
+  --color-fail: 229 57 53;
+  --color-neutral: 136 136 136;
 
   --color-text: var(--color-fg);
   --alpha-text: 0.8;

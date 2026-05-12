@@ -55,3 +55,68 @@
     border-radius: 0;
   }
 }
+
+.readycheck {
+  border: 1px solid rgb(var(--color-fg) / 0.4);
+  border-radius: 4px;
+  padding: 0.5em 0.75em;
+  margin: 0.25em 0 !important;
+  background: rgb(var(--color-fg) / 0.05);
+
+  header {
+    margin-bottom: 0.4em;
+
+    .countdown {
+      opacity: 0.7;
+      font-size: 0.9em;
+    }
+  }
+
+  .readycheck-peers {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.4em 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25em 0.75em;
+
+    .peer {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.3em;
+
+      .status {
+        font-family: monospace;
+      }
+
+      &.pending .status { color: rgb(var(--color-neutral) / 1); }
+      &.yes .status { color: rgb(var(--color-success) / 1); }
+      &.no .status { color: rgb(var(--color-fail) / 1); }
+      &.abstain .status { color: rgb(var(--color-fail) / 1); }
+    }
+  }
+
+  .buttons {
+    display: flex;
+    gap: 0.4em;
+    margin-top: 0.5em;
+
+    button {
+      padding: 0.15em 0.7em;
+      font-size: 0.85em;
+      background: rgb(var(--color-fg) / 0.1);
+      border: 1px solid rgb(var(--color-fg) / 0.2);
+      color: inherit;
+
+      &:hover:not(:disabled) {
+        background: rgb(var(--color-fg) / 0.18);
+      }
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &.complete .buttons { display: none; }
+}

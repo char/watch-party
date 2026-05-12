@@ -6,6 +6,16 @@ import { RoomConfig } from "../common/room-config.ts";
 import { SessionConnection } from "./connection.ts";
 import { randomBase32 } from "./util/base32.ts";
 
+export interface ActiveReadyCheck {
+  voteId: string;
+  initiator: string;
+  managementToken: string;
+  participants: Set<string>;
+  votes: Map<string, "yes" | "no">;
+  endsAt: number;
+  timeout: number;
+}
+
 export class WatchSession {
   static SESSIONS = new Map<string, WatchSession>();
 
@@ -18,6 +28,8 @@ export class WatchSession {
 
   roomConfig: RoomConfig = {};
   editToken: string = randomBase32(24);
+
+  activeReadyCheck: ActiveReadyCheck | undefined = undefined;
 
   lastPlayhead: number = 0; // milliseconds
   playedAt: Temporal.Instant | undefined = undefined;
@@ -55,6 +67,10 @@ export class WatchSession {
         connection.sockets.delete(socket);
       }
     }
+  }
+
+  sendTo(connection: SessionConnection, packet: ServerPacket) {
+    this.#send(connection, encodeCbor(packet));
   }
 
   info() {
@@ -112,5 +128,79 @@ export class WatchSession {
       system: true,
       timestamp: Date.now(),
     });
+
+    if (this.activeReadyCheck?.participants.delete(connection.id))
+      this.checkReadyCheckCompletion();
+  }
+
+  startReadyCheck(initiator: SessionConnection): boolean {
+    if (this.activeReadyCheck) return false;
+
+    const voteId = randomBase32(12);
+    const managementToken = randomBase32(16);
+    const duration = 30_000;
+    const endsAt = Date.now() + duration;
+    const participants = new Set(this.connections.map(c => c.id));
+
+    this.activeReadyCheck = {
+      voteId,
+      initiator: initiator.id,
+      managementToken,
+      participants,
+      votes: new Map(),
+      endsAt,
+      timeout: setTimeout(() => this.completeReadyCheck(voteId), duration),
+    };
+
+    this.broadcast({
+      type: "ReadyCheckStarted",
+      voteId,
+      from: initiator.id,
+      endsAt,
+      participants: [...participants],
+    });
+    this.sendTo(initiator, { type: "ReadyCheckManagement", voteId, managementToken });
+    return true;
+  }
+
+  recordReadyCheckVote(
+    connection: SessionConnection,
+    voteId: string,
+    vote: "yes" | "no",
+  ): void {
+    const rc = this.activeReadyCheck;
+    if (!rc || rc.voteId !== voteId) return;
+    if (!rc.participants.has(connection.id)) return;
+    if (rc.votes.has(connection.id)) return;
+
+    rc.votes.set(connection.id, vote);
+    this.broadcast({ type: "ReadyCheckVote", voteId, from: connection.id, vote });
+    this.checkReadyCheckCompletion();
+  }
+
+  terminateReadyCheck(voteId: string, managementToken: string): void {
+    const rc = this.activeReadyCheck;
+    if (!rc || rc.voteId !== voteId) return;
+    if (rc.managementToken !== managementToken) return;
+    this.completeReadyCheck(voteId);
+  }
+
+  checkReadyCheckCompletion(): void {
+    const rc = this.activeReadyCheck;
+    if (!rc) return;
+    if (rc.votes.size >= rc.participants.size) this.completeReadyCheck(rc.voteId);
+  }
+
+  completeReadyCheck(voteId: string): void {
+    const rc = this.activeReadyCheck;
+    if (!rc || rc.voteId !== voteId) return;
+    clearTimeout(rc.timeout);
+    this.activeReadyCheck = undefined;
+
+    for (const peer of rc.participants) {
+      if (rc.votes.has(peer)) continue;
+      this.broadcast({ type: "ReadyCheckAbstain", voteId, peer });
+    }
+    this.broadcast({ type: "ReadyCheckComplete", voteId });
   }
 }
