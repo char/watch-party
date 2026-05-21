@@ -62,6 +62,10 @@ export class ChatWindow {
   #readyCheckAudio = createReadyCheckAudio();
   #readyChecks = new Map<string, ReadyCheckEmbed>();
   #activeReadyCheckId: string | undefined;
+  #originalSubtitleCueTimes = new Map<
+    string,
+    WeakMap<TextTrackCue, { startTime: number; endTime: number }>
+  >();
 
   constructor(public session: SessionConnection) {
     this.messages = <div id="chat-messages"></div>;
@@ -160,14 +164,29 @@ export class ChatWindow {
         const milliseconds = parseFloat(args[1]);
         if (Number.isNaN(milliseconds)) return;
 
+        const videoKey = JSON.stringify(
+          this.session.video.currentVideo.get() ?? this.session.video.id,
+        );
+        let originalCueTimes = this.#originalSubtitleCueTimes.get(videoKey);
+        if (!originalCueTimes) {
+          originalCueTimes = new WeakMap();
+          this.#originalSubtitleCueTimes.set(videoKey, originalCueTimes);
+        }
+
         // TODO: store the video element in the videostate
         const video = document.querySelector("video")!;
+        const delaySeconds = milliseconds / 1000;
         for (const track of Array.from(video.textTracks)) {
           if (track.mode !== "showing") continue;
           if (!track.cues) continue;
           for (const cue of Array.from(track.cues)) {
-            cue.startTime += milliseconds / 1000;
-            cue.endTime += milliseconds / 1000;
+            let originalTimes = originalCueTimes.get(cue);
+            if (!originalTimes) {
+              originalTimes = { startTime: cue.startTime, endTime: cue.endTime };
+              originalCueTimes.set(cue, originalTimes);
+            }
+            cue.startTime = originalTimes.startTime + delaySeconds;
+            cue.endTime = originalTimes.endTime + delaySeconds;
             cue.dispatchEvent(new Event("exit"));
           }
           // idk
@@ -177,7 +196,7 @@ export class ChatWindow {
 
         this.append(
           <article class="system">
-            tweaked subtitle delay by <strong>{milliseconds.toFixed(0)}ms</strong>.
+            set subtitle delay to <strong>{milliseconds.toFixed(0)}ms</strong>.
           </article>,
         );
 
@@ -266,7 +285,7 @@ export class ChatWindow {
                 <kbd>/lock</kbd> - locks video controls (forces resync on video events)
               </li>
               <li>
-                <kbd>/subdelay [ms]</kbd> - bump subtitle delay (positive = later)
+                <kbd>/subdelay [ms]</kbd> - set subtitle delay (positive = later)
               </li>
               <li>
                 <kbd>/readycheck</kbd> (or <kbd>/rc</kbd>) - start a 30-second ready check;{" "}
