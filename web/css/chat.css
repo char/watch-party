@@ -89,10 +89,18 @@
         font-family: monospace;
       }
 
-      &.pending .status { color: rgb(var(--color-neutral) / 1); }
-      &.yes .status { color: rgb(var(--color-success) / 1); }
-      &.no .status { color: rgb(var(--color-fail) / 1); }
-      &.abstain .status { color: rgb(var(--color-fail) / 1); }
+      &.pending .status {
+        color: rgb(var(--color-neutral) / 1);
+      }
+      &.yes .status {
+        color: rgb(var(--color-success) / 1);
+      }
+      &.no .status {
+        color: rgb(var(--color-fail) / 1);
+      }
+      &.abstain .status {
+        color: rgb(var(--color-fail) / 1);
+      }
     }
   }
 
@@ -118,5 +126,7 @@
     }
   }
 
-  &.complete .buttons { display: none; }
+  &.complete .buttons {
+    display: none;
+  }
 }

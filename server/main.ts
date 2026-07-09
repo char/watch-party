@@ -1,115 +1,56 @@
-import "../common/pipe.ts";
+import { Application, HttpError, Router, Status } from "@oak/oak";
+import { randomId } from "../common/id.ts";
+import { validateCreateRoomRequest } from "../common/protocol.ts";
+import { Room } from "./room.ts";
 
-import * as j from "@char/justin";
-import { Application, HttpError, RouteParams, Router, RouterContext, Status } from "@oak/oak";
-
-import { PlaylistItemSchema } from "../common/playlist.ts";
-import { RoomConfigSchema } from "../common/room-config.ts";
-import { handleConnection, SessionConnection } from "./connection.ts";
-import { WatchSession } from "./session.ts";
-import { apiHandler } from "./util/api.ts";
-import { randomBase32 } from "./util/base32.ts";
-
-const router = new Router();
-
-export class HTTPError extends Error {
+class ApiError extends Error {
   constructor(
-    public status: Status,
+    readonly status: Status,
     message: string,
   ) {
     super(message);
   }
 }
 
-router.get("/api/session/:session/connect", ctx => {
-  const session = WatchSession.SESSIONS.get(ctx.params.session);
-  if (!session) {
-    throw new HTTPError(Status.NotFound, "no session found with given ID");
-  }
+const router = new Router();
 
-  const resumptionToken = ctx.request.url.searchParams.get("resume") ?? undefined;
+router.put("/api/room", async ctx => {
+  const body = await ctx.request.body.json().catch(() => undefined);
+  const { value, errors } = validateCreateRoomRequest(body);
+  if (errors || !value) throw new ApiError(Status.BadRequest, "invalid room request");
 
-  let connection: SessionConnection;
-  if (resumptionToken) {
-    const maybeConnection = session.connections.find(
-      it => it.resumptionToken === resumptionToken,
-    );
-    if (maybeConnection === undefined)
-      throw new HTTPError(Status.Forbidden, "invalid session resumption token");
-    connection = maybeConnection;
-  } else {
-    const nickname = ctx.request.url.searchParams.get("nickname");
-    if (!nickname) throw new HTTPError(Status.BadRequest, "missing nickname");
+  let id = value.id || randomId(16);
+  while (Room.rooms.has(id)) id = randomId(16);
 
-    const displayColor = ctx.request.url.searchParams.get("color");
-    if (!displayColor) throw new HTTPError(Status.BadRequest, "missing color");
-
-    const connectionId = randomBase32(8);
-    connection = {
-      id: connectionId,
-      peer: {
-        connectionId,
-        nickname,
-        displayColor,
-      },
-      lastKeepalive: Date.now(),
-      resumptionToken: randomBase32(16),
-      sockets: new Set(),
-    };
-
-    session.addPeer(connection);
-  }
-
-  handleConnection(session, connection, ctx.upgrade());
+  const room = new Room(id, value.playlist, value.config);
+  ctx.response.body = { id, editToken: room.editToken };
 });
 
-router.put(
-  "/api/session",
-  apiHandler(
-    {
-      body: j.obj({
-        id: j.string.$pipe(j.optional),
-        playlist: PlaylistItemSchema.$pipe(j.array).$pipe(j.optional),
-        config: RoomConfigSchema.$pipe(j.optional),
-      }),
-    },
-    (_ctx, { body }) => {
-      let id = body.id || randomBase32(16);
-      while (WatchSession.SESSIONS.has(id)) id = randomBase32(16);
-      const session = new WatchSession(id);
-      if (body.playlist) session.playlist = body.playlist;
-      if (session.playlist.length) session.playlistIndex = 0;
-      if (body.config) session.roomConfig = body.config;
-      return { ...session.info(), editToken: session.editToken };
-    },
-  ),
-);
+router.get("/api/room/:room/connect", ctx => {
+  const room = Room.rooms.get(ctx.params.room);
+  if (!room) throw new ApiError(Status.NotFound, "room not found");
 
-router.patch(
-  "/api/session/:session/config",
-  (_c, next) => next(), // if i dont have this empty guy the type inference fails on apiHandler for some reason
-  apiHandler({ body: RoomConfigSchema }, (ctx, { body }) => {
-    const session = WatchSession.SESSIONS.get(ctx.params.session);
-    if (!session) {
-      throw new HTTPError(Status.NotFound, "no session found with given ID");
-    }
-    const auth = ctx.request.headers.get("Authorization");
-    const token = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
-    if (token !== session.editToken) {
-      throw new HTTPError(Status.Unauthorized, "invalid edit token");
-    }
-    session.roomConfig = body;
-    session.broadcast({ type: "RoomConfigUpdate", roomConfig: body });
-    return { ok: true };
-  }),
-);
+  const resumeToken = ctx.request.url.searchParams.get("resume") ?? undefined;
+  const socket = ctx.upgrade();
+
+  if (resumeToken) {
+    room.connect(socket, { resumeToken });
+    return;
+  }
+
+  const nickname = ctx.request.url.searchParams.get("nickname");
+  const displayColor = ctx.request.url.searchParams.get("color");
+  if (!nickname || !displayColor) {
+    socket.close(1008, "missing identity");
+    return;
+  }
+
+  room.connect(socket, { nickname, displayColor });
+});
 
 router.get("/:path*", async ctx => {
   try {
-    await ctx.send({
-      root: "./web",
-      index: "index.html",
-    });
+    await ctx.send({ root: "./web", index: "index.html" });
   } catch (err) {
     if (err instanceof HttpError) {
       ctx.response.status = err.status;
@@ -118,23 +59,30 @@ router.get("/:path*", async ctx => {
   }
 });
 
-const app = new Application();
+export const app = new Application();
 
 app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
-    if (err instanceof HTTPError) {
+    if (err instanceof ApiError) {
       ctx.response.status = err.status;
-      ctx.response.body = err.message;
-      ctx.response.type = "text/plain";
-    } else throw err;
+      ctx.response.type = "application/json";
+      ctx.response.body = { error: err.message };
+      return;
+    }
+    throw err;
   }
 });
 
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-const bindHost = Deno.env.get("BIND_HOST");
-console.log(`Listening on: http://${bindHost ?? "127.0.0.1"}:8524/ ...`);
-app.listen({ hostname: bindHost ?? "0.0.0.0", port: 8524 });
+if (import.meta.main) {
+  const hostname = Deno.env.get("BIND_HOST") ?? "0.0.0.0";
+  const port = Number(Deno.env.get("PORT") ?? 8524);
+  console.log(
+    `Listening on http://${hostname === "0.0.0.0" ? "127.0.0.1" : hostname}:${port}/ ...`,
+  );
+  await app.listen({ hostname, port });
+}
