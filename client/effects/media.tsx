@@ -1,9 +1,16 @@
-import { playheadAt, type ClientCommand, type PlaylistItem } from "../../common/model.ts";
+import {
+  playheadAt,
+  suggestedSubtitleDelay,
+  type ClientCommand,
+  type PlaylistItem,
+} from "../../common/model.ts";
 import type { LocalPrefs } from "../prefs.ts";
 import type { Session } from "../session.ts";
 
 export interface MediaController {
   readonly elem: HTMLElement;
+  activeSubtitleTrackIndex(): number | undefined;
+  setSubtitleDelay(delayMs: number): void;
   dispose(): void;
 }
 
@@ -14,7 +21,10 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
   const elem = (<div id="video-container" />) as HTMLElement;
   const empty = <div class="video-status">There is no video currently playing.</div>;
   let media: HTMLMediaElement | undefined;
+  let renderedItemId: string | undefined;
   let originalCueTimes = new WeakMap<TextTrackCue, { startTime: number; endTime: number }>();
+  let subtitleDelays = new WeakMap<TextTrack, number>();
+  let previousSubtitleTrackIndex: number | undefined;
   let suppressLocalEventsUntil = 0;
   let emitTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -25,8 +35,20 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
   };
 
   const render = (item: PlaylistItem | undefined) => {
+    const previousTrackIndex = activeSubtitleTrackIndex();
+    const previousTrack =
+      media instanceof HTMLVideoElement && previousTrackIndex !== undefined
+        ? media.textTracks[previousTrackIndex]
+        : undefined;
+    const wasFollowing =
+      previousTrack &&
+      renderedItemId &&
+      (subtitleDelays.get(previousTrack) ?? prefs.subtitleDelayMs.get()) ===
+        suggestedSubtitleDelay(session.room, renderedItemId, previousTrackIndex!);
+
     media?.remove();
     media = undefined;
+    renderedItemId = item?.id;
     elem.textContent = "";
 
     if (!item) {
@@ -57,6 +79,12 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
 
     media = next;
     originalCueTimes = new WeakMap();
+    subtitleDelays = new WeakMap();
+    if (wasFollowing && media instanceof HTMLVideoElement) {
+      for (const [trackIndex, track] of Array.from(media.textTracks).entries())
+        subtitleDelays.set(track, suggestedSubtitleDelay(session.room, item.id, trackIndex));
+    }
+    previousSubtitleTrackIndex = undefined;
     media.volume = prefs.volume.get();
     attachMediaEvents(next);
     elem.append(next);
@@ -109,6 +137,12 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     });
     for (const track of target.querySelectorAll("track"))
       track.addEventListener("load", () => applySubtitleDelay(), { signal: abort.signal });
+    if (target instanceof HTMLVideoElement) {
+      previousSubtitleTrackIndex = activeSubtitleTrackIndex();
+      target.textTracks.addEventListener("change", () => queueMicrotask(subtitleTrackChanged), {
+        signal: abort.signal,
+      });
+    }
 
     target.addEventListener("seeking", () => emitPlayback(target.paused), {
       signal: abort.signal,
@@ -141,12 +175,22 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     }, 75);
   };
 
-  const applySubtitleDelay = () => {
+  const activeSubtitleTrackIndex = (): number | undefined => {
+    if (!(media instanceof HTMLVideoElement)) return undefined;
+    const tracks = Array.from(media.textTracks);
+    const index = tracks.findIndex(track => track.mode === "showing");
+    const enabledIndex =
+      index < 0 ? tracks.findIndex(track => track.mode !== "disabled") : index;
+    return enabledIndex < 0 ? undefined : enabledIndex;
+  };
+
+  const applySubtitleDelay = (onlyTrack?: TextTrack) => {
     const video = media instanceof HTMLVideoElement ? media : undefined;
     if (!video) return;
-    const delaySeconds = prefs.subtitleDelayMs.get() / 1000;
-    for (const track of Array.from(video.textTracks)) {
+    const tracks = onlyTrack ? [onlyTrack] : Array.from(video.textTracks);
+    for (const track of tracks) {
       if (!track.cues) continue;
+      const delaySeconds = (subtitleDelays.get(track) ?? prefs.subtitleDelayMs.get()) / 1000;
       for (const cue of Array.from(track.cues)) {
         let original = originalCueTimes.get(cue);
         if (!original) {
@@ -162,6 +206,44 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     }
   };
 
+  const subtitleTrackChanged = () => {
+    const itemId = session.room.currentItemId;
+    const trackIndex = activeSubtitleTrackIndex();
+    if (
+      !(media instanceof HTMLVideoElement) ||
+      !itemId ||
+      trackIndex === undefined ||
+      trackIndex === previousSubtitleTrackIndex
+    ) {
+      previousSubtitleTrackIndex = trackIndex;
+      return;
+    }
+
+    const tracks = Array.from(media.textTracks);
+    const previousTrack =
+      previousSubtitleTrackIndex === undefined ? undefined : tracks[previousSubtitleTrackIndex];
+    const wasFollowing =
+      previousTrack &&
+      (subtitleDelays.get(previousTrack) ?? prefs.subtitleDelayMs.get()) ===
+        suggestedSubtitleDelay(session.room, itemId, previousSubtitleTrackIndex!);
+    const track = tracks[trackIndex];
+    if (wasFollowing) {
+      subtitleDelays.set(track, suggestedSubtitleDelay(session.room, itemId, trackIndex));
+      applySubtitleDelay(track);
+    }
+    previousSubtitleTrackIndex = trackIndex;
+  };
+
+  const setSubtitleDelay = (delayMs: number) => {
+    prefs.subtitleDelayMs.set(delayMs);
+    if (!(media instanceof HTMLVideoElement)) return;
+    const trackIndex = activeSubtitleTrackIndex();
+    if (trackIndex === undefined) return;
+    const track = media.textTracks[trackIndex];
+    subtitleDelays.set(track, delayMs);
+    applySubtitleDelay(track);
+  };
+
   const send = (command: ClientCommand) => session.send(command);
 
   render(session.room.playlist.find(item => item.id === session.room.currentItemId));
@@ -170,11 +252,23 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     const previousItem = previous.playlist.find(item => item.id === previous.currentItemId);
     if (item !== previousItem) render(item);
     if (room.playback !== previous.playback) applyPlayback();
+
+    if (!(media instanceof HTMLVideoElement) || !item) return;
+    for (const [trackIndex, track] of Array.from(media.textTracks).entries()) {
+      const previousDelay = suggestedSubtitleDelay(previous, item.id, trackIndex);
+      const delay = suggestedSubtitleDelay(room, item.id, trackIndex);
+      if (
+        delay !== previousDelay &&
+        (subtitleDelays.get(track) ?? prefs.subtitleDelayMs.get()) === previousDelay
+      ) {
+        subtitleDelays.set(track, delay);
+        applySubtitleDelay(track);
+      }
+    }
   });
   prefs.volume.subscribe(volume => {
     if (media && Math.abs(media.volume - volume) > 0.001) media.volume = volume;
   });
-  prefs.subtitleDelayMs.subscribe(() => applySubtitleDelay());
 
   const reportInterval = setInterval(() => {
     if (!media) return;
@@ -190,6 +284,8 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
 
   return {
     elem,
+    activeSubtitleTrackIndex,
+    setSubtitleDelay,
     dispose() {
       abort.abort();
       media?.remove();

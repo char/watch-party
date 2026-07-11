@@ -14,12 +14,25 @@ export function activeReadyCheck(room: RoomState): ReadyCheckEntry | undefined {
   return entry && !entry.completed ? entry : undefined;
 }
 
+export function suggestedSubtitleDelay(
+  room: RoomState,
+  itemId: string,
+  trackIndex: number,
+): number {
+  return (
+    room.suggestedSubtitleDelays.find(
+      delay => delay.itemId === itemId && delay.trackIndex === trackIndex,
+    )?.delayMs ?? 0
+  );
+}
+
 export function emptyRoomState(id: string, serverNowMs: number): RoomState {
   return {
     id,
     peerProfiles: [],
     presentPeerIds: [],
     playlist: [],
+    suggestedSubtitleDelays: [],
     playback: {
       positionMs: 0,
       updatedAtServerMs: serverNowMs,

@@ -303,6 +303,30 @@ export class Room {
       case "room/update-config":
         if (command.editToken !== this.#editToken) return [];
         return [{ type: "room/config-updated", config: command.config }];
+
+      case "subtitle-delay/set": {
+        if (command.editToken !== this.#editToken) return [];
+        const item = this.#state.playlist.find(item => item.id === command.itemId);
+        if (
+          !item ||
+          item.id !== this.#state.currentItemId ||
+          !Number.isInteger(command.trackIndex) ||
+          command.trackIndex < 0 ||
+          command.trackIndex >= item.subtitles.length ||
+          !Number.isFinite(command.delayMs)
+        ) {
+          return [];
+        }
+        return [
+          {
+            type: "subtitle-delay/changed",
+            by: peerId,
+            itemId: command.itemId,
+            trackIndex: command.trackIndex,
+            delayMs: command.delayMs,
+          },
+        ];
+      }
     }
   }
 

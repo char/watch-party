@@ -103,6 +103,12 @@ const RoomConfigSchema = j.obj({
   autoLock: j.optional(j.boolean),
 });
 
+const SuggestedSubtitleDelaySchema = j.obj({
+  itemId: j.string,
+  trackIndex: j.number,
+  delayMs: j.number,
+});
+
 const RoomStateSchema = j.obj({
   id: j.string,
   peerProfiles: j.array(PeerSchema),
@@ -110,6 +116,7 @@ const RoomStateSchema = j.obj({
   playlist: j.array(PlaylistItemSchema),
   currentItemId: j.optional(j.string),
   playback: PlaybackStateSchema,
+  suggestedSubtitleDelays: j.array(SuggestedSubtitleDelaySchema),
   timeline: j.array(TimelineEntrySchema),
   config: RoomConfigSchema,
 });
@@ -138,6 +145,12 @@ const ClientCommandSchema = j.discriminatedUnion("type", [
   tagged("room/update-config", {
     editToken: j.string,
     config: RoomConfigSchema,
+  }),
+  tagged("subtitle-delay/set", {
+    editToken: j.string,
+    itemId: j.string,
+    trackIndex: j.number,
+    delayMs: j.number,
   }),
   tagged("peer/leave", {}),
 ]);
@@ -182,6 +195,12 @@ const RoomEventSchema = j.discriminatedUnion("type", [
   }),
   tagged("ready-check/completed", { checkId: j.string }),
   tagged("room/config-updated", { config: RoomConfigSchema }),
+  tagged("subtitle-delay/changed", {
+    by: j.string,
+    itemId: j.string,
+    trackIndex: j.number,
+    delayMs: j.number,
+  }),
 ]);
 
 const ServerPacketSchema = j.discriminatedUnion("type", [
@@ -222,6 +241,7 @@ export type ReadyCheckVote = j.Infer<typeof ReadyCheckVoteSchema>;
 export type ReadyCheckEntry = j.Infer<typeof ReadyCheckEntrySchema>;
 export type TimelineEntry = j.Infer<typeof TimelineEntrySchema>;
 export type RoomConfig = j.Infer<typeof RoomConfigSchema>;
+export type SuggestedSubtitleDelay = j.Infer<typeof SuggestedSubtitleDelaySchema>;
 export type RoomState = j.Infer<typeof RoomStateSchema>;
 export type ClientCommand = j.Infer<typeof ClientCommandSchema>;
 export type RoomEvent = j.Infer<typeof RoomEventSchema>;

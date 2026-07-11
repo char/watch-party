@@ -19,6 +19,8 @@ export function Chat(opts: {
   prefs: LocalPrefs;
   openPlaylist(): void;
   openPeers(): void;
+  activeSubtitleTrackIndex(): number | undefined;
+  setSubtitleDelay(delayMs: number): void;
 }) {
   const messages = <div id="chat-messages" />;
   const input = new Signal("");
@@ -167,6 +169,8 @@ function executeCommand(
     prefs: LocalPrefs;
     openPlaylist(): void;
     openPeers(): void;
+    activeSubtitleTrackIndex(): number | undefined;
+    setSubtitleDelay(delayMs: number): void;
     localMessage(text: string): void;
   },
 ) {
@@ -196,8 +200,36 @@ function executeCommand(
         opts.localMessage("usage: /subdelay [ms]");
         break;
       }
-      opts.prefs.subtitleDelayMs.set(delay);
+      opts.setSubtitleDelay(delay);
       opts.localMessage(`set subtitle delay to ${delay.toFixed(0)}ms.`);
+      break;
+    }
+
+    case "gsubdelay": {
+      const delay = Number(args[0]);
+      if (!Number.isFinite(delay)) {
+        opts.localMessage("usage: /gsubdelay [ms]");
+        break;
+      }
+      const token = opts.session.editToken.get();
+      if (!token) {
+        opts.localMessage("no edit token for this room.");
+        break;
+      }
+      const itemId = opts.session.room.currentItemId;
+      const trackIndex = opts.activeSubtitleTrackIndex();
+      if (!itemId || trackIndex === undefined) {
+        opts.localMessage("no subtitle track is currently active.");
+        break;
+      }
+      opts.session.send({
+        type: "subtitle-delay/set",
+        editToken: token,
+        itemId,
+        trackIndex,
+        delayMs: delay,
+      });
+      opts.localMessage(`set global subtitle delay to ${delay.toFixed(0)}ms.`);
       break;
     }
 
@@ -268,7 +300,7 @@ function executeCommand(
     case "help":
     default:
       opts.localMessage(
-        "commands: /sync, /lock, /subdelay [ms], /playlist, /peers (or /list), /rc, /rc yes|no, /edit-auth [token], /autolock",
+        "commands: /sync, /lock, /subdelay [ms], /gsubdelay [ms], /playlist, /peers (or /list), /rc, /rc yes|no, /edit-auth [token], /autolock",
       );
       break;
   }

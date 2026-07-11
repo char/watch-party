@@ -23,6 +23,8 @@ export function RoomScreen(session: Session, prefs: LocalPrefs) {
           prefs,
           openPlaylist: () => playlist.showModal(),
           openPeers: () => peers.showModal(),
+          activeSubtitleTrackIndex: media.activeSubtitleTrackIndex,
+          setSubtitleDelay: media.setSubtitleDelay,
         })}
       </div>
       {playlist}
