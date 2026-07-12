@@ -103,6 +103,14 @@ export function Chat(opts: {
         `${event.playback.paused ? "paused" : "started playing"} at ${formatTime(event.playback.positionMs)}`,
         event.by,
       );
+    if (
+      event.type === "playlist/item-added" ||
+      event.type === "playlist/item-removed" ||
+      event.type === "playlist/item-edited"
+    )
+      addLocalMessage("updated the playlist", event.by);
+    if (event.type === "playlist/selected")
+      addLocalMessage("switched playlist entry", event.by);
     if (event.type === "ready-check/voted" && event.peerId === opts.session.self.id)
       playReadyCheckAudio(event.vote === "yes" ? readyCheckAudio.yes : readyCheckAudio.no);
   });
