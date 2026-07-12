@@ -40,7 +40,7 @@ async function join(roomId: string, editToken?: string) {
     main.replaceChildren(room);
     const messages = room.querySelector("#chat-messages")!;
     messages.scrollTop = messages.scrollHeight;
-    window.addEventListener("beforeunload", () => session.close(), {
+    window.addEventListener("beforeunload", () => session.leave(), {
       once: true,
     });
   } catch (err) {
