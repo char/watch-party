@@ -97,6 +97,10 @@ export function renderReadyCheck(
         const status = peer.querySelector(".status");
         if (status) status.textContent = VOTE_GLYPH[event.vote];
       }
+      if (event.peerId === session.self.id) {
+        for (const button of article.querySelectorAll(".buttons .yes, .buttons .no"))
+          (button as HTMLElement).style.display = "none";
+      }
     }
 
     if (event.type === "ready-check/completed" && event.checkId === entry.id) {
