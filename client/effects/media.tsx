@@ -247,6 +247,11 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
   const send = (command: ClientCommand) => session.send(command);
 
   render(session.room.playlist.find(item => item.id === session.room.currentItemId));
+  // sync responses are playback changes without an author: snap unconditionally
+  const unsubscribeSync = session.onEvent(event => {
+    if (event.type === "playback/changed" && event.by === undefined) applyPlayback(true);
+  });
+  abort.signal.addEventListener("abort", unsubscribeSync, { once: true });
   session.onRoomChange((room, previous) => {
     const item = room.playlist.find(item => item.id === room.currentItemId);
     const previousItem = previous.playlist.find(item => item.id === previous.currentItemId);
