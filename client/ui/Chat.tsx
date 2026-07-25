@@ -276,7 +276,10 @@ function executeCommand(
     case "edit-auth": {
       const token = args[0];
       if (!token) {
-        opts.localMessage("usage: /edit-auth [token]");
+        const current = opts.session.editToken.get();
+        opts.localMessage(
+          current ? `edit token: ${current}` : "no edit token set. usage: /edit-auth [token]",
+        );
         break;
       }
       opts.session.editToken.set(token);
