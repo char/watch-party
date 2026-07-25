@@ -109,7 +109,7 @@ const SuggestedSubtitleDelaySchema = j.obj({
   delayMs: j.number,
 });
 
-const RoomStateSchema = j.obj({
+const RoomSnapshotSchema = j.obj({
   id: j.string,
   peerProfiles: j.array(PeerSchema),
   presentPeerIds: j.array(j.string),
@@ -207,7 +207,7 @@ const ServerPacketSchema = j.discriminatedUnion("type", [
   tagged("hello", {
     self: PeerSchema,
     resumeToken: j.string,
-    snapshot: RoomStateSchema,
+    snapshot: RoomSnapshotSchema,
     serverTimeMs: j.number,
   }),
   tagged("event", {
@@ -242,7 +242,7 @@ export type ReadyCheckEntry = j.Infer<typeof ReadyCheckEntrySchema>;
 export type TimelineEntry = j.Infer<typeof TimelineEntrySchema>;
 export type RoomConfig = j.Infer<typeof RoomConfigSchema>;
 export type SuggestedSubtitleDelay = j.Infer<typeof SuggestedSubtitleDelaySchema>;
-export type RoomState = j.Infer<typeof RoomStateSchema>;
+export type RoomSnapshot = j.Infer<typeof RoomSnapshotSchema>;
 export type ClientCommand = j.Infer<typeof ClientCommandSchema>;
 export type RoomEvent = j.Infer<typeof RoomEventSchema>;
 export type ServerPacket = j.Infer<typeof ServerPacketSchema>;

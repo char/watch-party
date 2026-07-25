@@ -15,11 +15,11 @@ export interface ReadyCheckRender {
 
 export function renderReadyCheck(
   session: Session,
-  peers: Peer[],
+  peers: ReadonlyMap<string, Peer>,
   entry: ReadyCheckEntry,
   onDispose?: () => void,
 ): ReadyCheckRender {
-  const initiator = peers.find(peer => peer.id === entry.initiator);
+  const initiator = peers.get(entry.initiator);
   const remaining = Math.max(0, Math.ceil((entry.endsAtServerMs - session.serverNow()) / 1000));
   const article = (
     <article
@@ -114,11 +114,14 @@ export function renderReadyCheck(
   return { elem: article, dispose };
 }
 
-function renderParticipants(peers: Peer[], votes: { peerId: string; vote?: ReadyCheckVote }[]) {
+function renderParticipants(
+  peers: ReadonlyMap<string, Peer>,
+  votes: { peerId: string; vote?: ReadyCheckVote }[],
+) {
   return (
     <ul class="readycheck-peers">
       {...votes.map(record => {
-        const peer = peers.find(peer => peer.id === record.peerId);
+        const peer = peers.get(record.peerId);
         if (!peer) return "";
         const vote = record.vote ?? "pending";
         return (

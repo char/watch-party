@@ -1,9 +1,4 @@
-import {
-  playheadAt,
-  suggestedSubtitleDelay,
-  type ClientCommand,
-  type PlaylistItem,
-} from "../../common/model.ts";
+import { playheadAt, type ClientCommand, type PlaylistItem } from "../../common/model.ts";
 import type { LocalPrefs } from "../prefs.ts";
 import type { Session } from "../session.ts";
 
@@ -24,6 +19,7 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
   let renderedItemId: string | undefined;
   let originalCueTimes = new WeakMap<TextTrackCue, { startTime: number; endTime: number }>();
   let subtitleDelays = new WeakMap<TextTrack, number>();
+  const followingSuggested = new WeakSet<TextTrack>();
   let previousSubtitleTrackIndex: number | undefined;
   let suppressLocalEventsUntil = 0;
   let emitTimer: ReturnType<typeof setTimeout> | undefined;
@@ -40,11 +36,7 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
       media instanceof HTMLVideoElement && previousTrackIndex !== undefined
         ? media.textTracks[previousTrackIndex]
         : undefined;
-    const wasFollowing =
-      previousTrack &&
-      renderedItemId &&
-      (subtitleDelays.get(previousTrack) ?? prefs.subtitleDelayMs.get()) ===
-        suggestedSubtitleDelay(session.room, renderedItemId, previousTrackIndex!);
+    const wasFollowing = previousTrack !== undefined && followingSuggested.has(previousTrack);
 
     media?.remove();
     media = undefined;
@@ -80,9 +72,14 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     media = next;
     originalCueTimes = new WeakMap();
     subtitleDelays = new WeakMap();
-    if (wasFollowing && media instanceof HTMLVideoElement) {
-      for (const [trackIndex, track] of Array.from(media.textTracks).entries())
-        subtitleDelays.set(track, suggestedSubtitleDelay(session.room, item.id, trackIndex));
+    if (media instanceof HTMLVideoElement) {
+      for (const [trackIndex, track] of Array.from(media.textTracks).entries()) {
+        const suggested = session.room.suggestedSubtitleDelay(item.id, trackIndex);
+        if (wasFollowing || prefs.subtitleDelayMs.get() === suggested) {
+          followingSuggested.add(track);
+          subtitleDelays.set(track, suggested);
+        }
+      }
     }
     previousSubtitleTrackIndex = undefined;
     media.volume = prefs.volume.get();
@@ -222,13 +219,11 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     const tracks = Array.from(media.textTracks);
     const previousTrack =
       previousSubtitleTrackIndex === undefined ? undefined : tracks[previousSubtitleTrackIndex];
-    const wasFollowing =
-      previousTrack &&
-      (subtitleDelays.get(previousTrack) ?? prefs.subtitleDelayMs.get()) ===
-        suggestedSubtitleDelay(session.room, itemId, previousSubtitleTrackIndex!);
+    const wasFollowing = previousTrack !== undefined && followingSuggested.has(previousTrack);
     const track = tracks[trackIndex];
     if (wasFollowing) {
-      subtitleDelays.set(track, suggestedSubtitleDelay(session.room, itemId, trackIndex));
+      followingSuggested.add(track);
+      subtitleDelays.set(track, session.room.suggestedSubtitleDelay(itemId, trackIndex));
       applySubtitleDelay(track);
     }
     previousSubtitleTrackIndex = trackIndex;
@@ -241,36 +236,58 @@ export function createMediaController(session: Session, prefs: LocalPrefs): Medi
     if (trackIndex === undefined) return;
     const track = media.textTracks[trackIndex];
     subtitleDelays.set(track, delayMs);
+    const itemId = session.room.currentItemId;
+    if (
+      itemId !== undefined &&
+      delayMs === session.room.suggestedSubtitleDelay(itemId, trackIndex)
+    )
+      followingSuggested.add(track);
+    else followingSuggested.delete(track);
     applySubtitleDelay(track);
   };
 
   const send = (command: ClientCommand) => session.send(command);
 
-  render(session.room.playlist.find(item => item.id === session.room.currentItemId));
-  // sync responses are playback changes without an author: snap unconditionally
-  const unsubscribeSync = session.onEvent(event => {
-    if (event.type === "playback/changed" && event.by === undefined) applyPlayback(true);
-  });
-  abort.signal.addEventListener("abort", unsubscribeSync, { once: true });
-  session.onRoomChange((room, previous) => {
-    const item = room.playlist.find(item => item.id === room.currentItemId);
-    const previousItem = previous.playlist.find(item => item.id === previous.currentItemId);
-    if (item !== previousItem) render(item);
-    if (room.playback !== previous.playback) applyPlayback();
+  const currentItem = () =>
+    session.room.playlist.find(item => item.id === session.room.currentItemId);
 
-    if (!(media instanceof HTMLVideoElement) || !item) return;
-    for (const [trackIndex, track] of Array.from(media.textTracks).entries()) {
-      const previousDelay = suggestedSubtitleDelay(previous, item.id, trackIndex);
-      const delay = suggestedSubtitleDelay(room, item.id, trackIndex);
-      if (
-        delay !== previousDelay &&
-        (subtitleDelays.get(track) ?? prefs.subtitleDelayMs.get()) === previousDelay
-      ) {
-        subtitleDelays.set(track, delay);
-        applySubtitleDelay(track);
+  render(currentItem());
+
+  const unsubscribeEvents = session.onEvent(event => {
+    switch (event.type) {
+      case "playback/changed":
+        // sync responses are playback changes without an author: snap unconditionally
+        applyPlayback(event.by === undefined);
+        break;
+
+      case "playlist/item-added":
+      case "playlist/item-removed":
+      case "playlist/selected":
+        if (currentItem()?.id !== renderedItemId) render(currentItem());
+        break;
+
+      case "playlist/item-edited":
+        if (event.itemId === renderedItemId) render(currentItem());
+        break;
+
+      case "subtitle-delay/changed": {
+        if (event.itemId !== renderedItemId || !(media instanceof HTMLVideoElement)) break;
+        const track = media.textTracks[event.trackIndex];
+        if (track && followingSuggested.has(track)) {
+          subtitleDelays.set(track, event.delayMs);
+          applySubtitleDelay(track);
+        }
+        break;
       }
     }
   });
+  abort.signal.addEventListener("abort", unsubscribeEvents, { once: true });
+
+  // a reconnect swaps in a fresh snapshot wholesale: re-render and re-sync
+  const statusSubscription = session.status.subscribe(status => {
+    if (status === "connected") render(currentItem());
+  });
+  abort.signal.addEventListener("abort", statusSubscription.unsubscribe, { once: true });
   prefs.volume.subscribe(volume => {
     if (media && Math.abs(media.volume - volume) > 0.001) media.volume = volume;
   });

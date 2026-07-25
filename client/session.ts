@@ -1,14 +1,8 @@
 import { decodeCBOR, encodeCBOR } from "@char/cbor";
 import { Signal } from "@char/aftercare";
 import { validateServerPacket } from "../common/protocol.ts";
-import { resolveRoomState } from "../common/room-state.ts";
-import type {
-  ClientCommand,
-  Peer,
-  RoomEvent,
-  RoomState,
-  ServerPacket,
-} from "../common/model.ts";
+import { RoomState } from "../common/room-state.ts";
+import type { ClientCommand, Peer, RoomEvent, ServerPacket } from "../common/model.ts";
 
 export type ConnectionStatus = "connected" | "reconnecting" | "closed";
 
@@ -39,7 +33,6 @@ export class Session {
   #serverOffsetMs = 0;
   #resumeToken = "";
   #eventListeners = new Set<(event: RoomEvent) => void>();
-  #roomListeners = new Set<(room: RoomState, previous: RoomState) => void>();
   #lifetime = new AbortController();
   #socketListeners: AbortController | undefined;
   #reconnectTask: Promise<void> | undefined;
@@ -73,11 +66,6 @@ export class Session {
     return () => this.#eventListeners.delete(listener);
   }
 
-  onRoomChange(listener: (room: RoomState, previous: RoomState) => void): () => void {
-    this.#roomListeners.add(listener);
-    return () => this.#roomListeners.delete(listener);
-  }
-
   close() {
     if (this.#lifetime.signal.aborted) return;
     this.#lifetime.abort();
@@ -98,7 +86,8 @@ export class Session {
     this.#resumeToken = hello.resumeToken;
     this.#serverOffsetMs = serverOffsetMs;
     this.#attach(socket);
-    this.#setRoom(hello.snapshot);
+    if (this.#room) this.#room.reset(hello.snapshot);
+    else this.#room = new RoomState(hello.snapshot);
     this.status.set("connected");
   }
 
@@ -117,7 +106,7 @@ export class Session {
           this.#serverOffsetMs,
           packet.serverTimeMs - Date.now(),
         );
-        this.#setRoom(resolveRoomState(this.#room, packet.event));
+        this.#room.apply(packet.event);
         for (const listener of this.#eventListeners) listener(packet.event);
       },
       { signal: listeners.signal },
@@ -129,12 +118,7 @@ export class Session {
   }
 
   #disconnect(socket: WebSocket) {
-    if (
-      socket !== this.#socket ||
-      this.#lifetime.signal.aborted ||
-      this.#reconnectTask
-    )
-      return;
+    if (socket !== this.#socket || this.#lifetime.signal.aborted || this.#reconnectTask) return;
 
     this.#socketListeners?.abort();
     socket.close();
@@ -169,13 +153,6 @@ export class Session {
     }
 
     this.#reconnectTask = undefined;
-  }
-
-  #setRoom(room: RoomState) {
-    const previous = this.#room;
-    this.#room = room;
-    if (!previous || room === previous) return;
-    for (const listener of this.#roomListeners) listener(room, previous);
   }
 }
 

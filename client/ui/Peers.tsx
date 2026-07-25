@@ -13,9 +13,8 @@ export function PeerDialog(session: Session) {
 
   const render = () => {
     list.textContent = "";
-    const present = new Set(session.room.presentPeerIds);
-    for (const peer of session.room.peerProfiles) {
-      if (!present.has(peer.id)) continue;
+    for (const peer of session.room.peers.values()) {
+      if (!session.room.presentPeerIds.has(peer.id)) continue;
       const playhead = playheads.get(peer.id);
       list.append(
         <li>
@@ -34,14 +33,12 @@ export function PeerDialog(session: Session) {
   };
 
   render();
-  session.onRoomChange((room, previous) => {
-    if (
-      room.peerProfiles !== previous.peerProfiles ||
-      room.presentPeerIds !== previous.presentPeerIds
-    )
-      render();
-  });
   session.onEvent(event => {
+    if (event.type === "peer/joined") render();
+    if (event.type === "peer/left") {
+      playheads.delete(event.peerId);
+      render();
+    }
     if (event.type === "peer/playhead-reported") {
       playheads.set(event.peerId, {
         positionMs: event.positionMs,
@@ -49,7 +46,12 @@ export function PeerDialog(session: Session) {
       });
       render();
     }
-    if (event.type === "peer/left") playheads.delete(event.peerId);
+  });
+  session.status.subscribe(status => {
+    if (status === "connected") {
+      playheads.clear();
+      render();
+    }
   });
 
   return dialog;

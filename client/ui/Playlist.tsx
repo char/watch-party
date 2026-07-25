@@ -27,27 +27,37 @@ export function PlaylistDialog(session: Session) {
 
   const render = () => {
     list.textContent = "";
-    const peers = session.room.peerProfiles;
+    const peers = session.room.peers;
     const current = session.room.currentItemId;
     for (const item of session.room.playlist) {
       list.append(renderItem(session, item, peers, item.id === current));
     }
   };
   render();
-  session.onRoomChange((room, previous) => {
-    if (
-      room.playlist !== previous.playlist ||
-      room.currentItemId !== previous.currentItemId ||
-      room.peerProfiles !== previous.peerProfiles
-    )
-      render();
+  session.onEvent(event => {
+    switch (event.type) {
+      case "playlist/item-added":
+      case "playlist/item-removed":
+      case "playlist/item-edited":
+      case "playlist/selected":
+      case "peer/joined":
+        render();
+    }
+  });
+  session.status.subscribe(status => {
+    if (status === "connected") render();
   });
 
   return dialog;
 }
 
-function renderItem(session: Session, item: PlaylistItem, peers: Peer[], active: boolean) {
-  const addedBy = item.addedBy ? peers.find(peer => peer.id === item.addedBy) : undefined;
+function renderItem(
+  session: Session,
+  item: PlaylistItem,
+  peers: ReadonlyMap<string, Peer>,
+  active: boolean,
+) {
+  const addedBy = item.addedBy ? peers.get(item.addedBy) : undefined;
   return (
     <details classList={["playlist-item", active ? "active" : undefined]}>
       <summary>

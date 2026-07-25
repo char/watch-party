@@ -1,7 +1,6 @@
 import { Signal } from "@char/aftercare";
 import { randomId } from "../../common/id.ts";
 import {
-  activeReadyCheck,
   playheadAt,
   systemMessage,
   type Message,
@@ -45,13 +44,12 @@ export function Chat(opts: {
   };
 
   const renderEntry = (entry: TimelineEntry): HTMLElement => {
-    if (entry.type !== "ready-check")
-      return renderMessage(entry, opts.session.room.peerProfiles);
+    if (entry.type !== "ready-check") return renderMessage(entry, opts.session.room.peers);
 
     if (!entry.completed) activeReadyCheck?.dispose();
     const rendered = renderReadyCheck(
       opts.session,
-      opts.session.room.peerProfiles,
+      opts.session.room.peers,
       entry,
       () => (activeReadyCheck = undefined),
     );
@@ -148,9 +146,9 @@ export function Chat(opts: {
   return chatWindow;
 }
 
-function renderMessage(message: Message, peers: Peer[]) {
+function renderMessage(message: Message, peers: ReadonlyMap<string, Peer>) {
   const peerId = message.type === "chat" ? message.from : message.peerId;
-  const peer = peerId ? peers.find(peer => peer.id === peerId) : undefined;
+  const peer = peerId ? peers.get(peerId) : undefined;
   const article = <article class={message.type === "system-message" ? "system" : undefined} />;
 
   if (peer) {
@@ -258,7 +256,7 @@ function executeCommand(
           : args[0] === "no" || args[0] === "n"
             ? "no"
             : undefined;
-      const check = activeReadyCheck(opts.session.room);
+      const check = opts.session.room.activeReadyCheck;
       if (!args[0]) {
         opts.session.send({
           type: "ready-check/start",

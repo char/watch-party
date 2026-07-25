@@ -6,13 +6,15 @@
     "server:watch": "deno run -A --unstable-temporal --watch ./server/main.ts",
     "start": "deno task client:build && deno task server:start",
     "dev": "deno task client:watch & deno task server:watch",
-    "fmt": "deno run -A npm:prettier --write 'client/**/*.{ts,tsx}' 'server/**/*.{ts,tsx}' 'common/**/*.{ts,tsx}'"
+    "fmt": "deno run -A npm:prettier --write 'client/**/*.{ts,tsx}' 'server/**/*.{ts,tsx}' 'common/**/*.{ts,tsx}'",
+    "test": "deno test"
   },
   "imports": {
     "@char/aftercare": "jsr:@char/aftercare@^0.6.5",
     "@char/cbor": "jsr:@char/cbor@0.1.5",
     "@char/justin": "jsr:@char/justin@^0.3.5",
     "@oak/oak": "jsr:@oak/oak@^17.2.0",
+    "@std/assert": "jsr:@std/assert@^1",
     "vanilla-colorful": "npm:vanilla-colorful@^0.7.2"
   },
   "compilerOptions": {

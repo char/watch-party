@@ -1,20 +1,17 @@
 import { decodeCBOR, encodeCBOR } from "@char/cbor";
 import { randomId } from "../common/id.ts";
 import {
-  activeReadyCheck,
-  emptyRoomState,
   playheadAt,
+  RoomState,
   systemMessage,
   type ClientCommand,
   type NewPlaylistItem,
   type Peer,
   type RoomConfig,
   type RoomEvent,
-  type RoomState,
   type ServerPacket,
 } from "../common/model.ts";
 import { validateClientCommand } from "../common/protocol.ts";
-import { resolveRoomState } from "../common/room-state.ts";
 
 interface Client {
   peer: Peer;
@@ -39,12 +36,10 @@ export class Room {
     config: RoomConfig = {},
   ) {
     const playlist = initialPlaylist.map(item => ({ ...item, id: randomId(12) }));
-    this.#state = {
-      ...emptyRoomState(id, Date.now()),
-      playlist,
-      currentItemId: playlist[0]?.id,
-      config,
-    };
+    this.#state = RoomState.empty(id, Date.now());
+    this.#state.playlist = playlist;
+    this.#state.currentItemId = playlist[0]?.id;
+    this.#state.config = config;
     this.#timeoutTimer = setInterval(() => this.#dropTimedOutPeers(), 1000);
     Room.rooms.set(id, this);
   }
@@ -76,7 +71,7 @@ export class Room {
       type: "hello",
       self: client.peer,
       resumeToken: client.resumeToken,
-      snapshot: this.#state,
+      snapshot: this.#state.snapshot(),
       serverTimeMs: Date.now(),
     });
 
@@ -262,7 +257,7 @@ export class Room {
         ];
 
       case "ready-check/start": {
-        if (activeReadyCheck(this.#state)) return [];
+        if (this.#state.activeReadyCheck) return [];
         const timestamp = Date.now();
         return [
           {
@@ -272,7 +267,7 @@ export class Room {
               id: randomId(12),
               initiator: peerId,
               timestamp,
-              votes: this.#state.presentPeerIds.map(peerId => ({ peerId })),
+              votes: [...this.#state.presentPeerIds].map(peerId => ({ peerId })),
               endsAtServerMs: timestamp + 30_000,
               completed: false,
             },
@@ -281,7 +276,7 @@ export class Room {
       }
 
       case "ready-check/vote": {
-        const check = activeReadyCheck(this.#state);
+        const check = this.#state.activeReadyCheck;
         if (check?.id !== command.checkId) return [];
         if (!check.votes.some(record => record.peerId === peerId && !record.vote)) return [];
         return [
@@ -295,7 +290,7 @@ export class Room {
       }
 
       case "ready-check/end": {
-        const check = activeReadyCheck(this.#state);
+        const check = this.#state.activeReadyCheck;
         if (check?.id !== command.checkId || check.initiator !== peerId) return [];
         return this.#completeReadyCheck(command.checkId);
       }
@@ -331,7 +326,7 @@ export class Room {
   }
 
   #apply(event: RoomEvent) {
-    this.#state = resolveRoomState(this.#state, event);
+    this.#state.apply(event);
 
     if (event.type === "peer/left") this.#dropClient(event.peerId);
     if (event.type === "ready-check/started")
@@ -345,13 +340,13 @@ export class Room {
         event.type === "peer/left") &&
       this.#readyCheckFullyVoted()
     ) {
-      const check = activeReadyCheck(this.#state);
+      const check = this.#state.activeReadyCheck;
       if (check) this.#apply({ type: "ready-check/completed", checkId: check.id });
     }
   }
 
   #completeReadyCheck(checkId: string): RoomEvent[] {
-    const check = activeReadyCheck(this.#state);
+    const check = this.#state.activeReadyCheck;
     if (check?.id !== checkId) return [];
 
     const abstentions = check.votes
@@ -417,7 +412,7 @@ export class Room {
   }
 
   #readyCheckFullyVoted(): boolean {
-    return activeReadyCheck(this.#state)?.votes.every(record => record.vote) ?? false;
+    return this.#state.activeReadyCheck?.votes.every(record => record.vote) ?? false;
   }
 
   #broadcastEvent(event: RoomEvent) {
