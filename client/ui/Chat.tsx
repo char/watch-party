@@ -109,6 +109,11 @@ export function Chat(opts: {
       addLocalMessage("updated the playlist", event.by);
     if (event.type === "playlist/selected")
       addLocalMessage("switched playlist entry", event.by);
+    if (event.type === "subtitle-delay/changed")
+      addLocalMessage(
+        `set the global subtitle delay to ${event.delayMs.toFixed(0)}ms.`,
+        event.by,
+      );
     if (event.type === "ready-check/voted" && event.peerId === opts.session.self.id)
       playReadyCheckAudio(event.vote === "yes" ? readyCheckAudio.yes : readyCheckAudio.no);
   });
@@ -235,7 +240,6 @@ function executeCommand(
         trackIndex,
         delayMs: delay,
       });
-      opts.localMessage(`set global subtitle delay to ${delay.toFixed(0)}ms.`);
       break;
     }
 
