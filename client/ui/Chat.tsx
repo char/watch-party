@@ -1,4 +1,3 @@
-import { Signal } from "@char/aftercare";
 import { randomId } from "../../common/id.ts";
 import {
   playheadAt,
@@ -22,7 +21,7 @@ export function Chat(opts: {
   setSubtitleDelay(delayMs: number): void;
 }) {
   const messages = <div id="chat-messages" />;
-  const input = new Signal("");
+  const input = (<input type="text" placeholder="message (or /help)" />) as HTMLInputElement;
   let localMessages: SystemMessage[] = [];
   let activeReadyCheck: ReadyCheckRender | undefined;
   const readyCheckAudio = {
@@ -127,7 +126,7 @@ export function Chat(opts: {
         id="chat-form"
         _onsubmit={(event: SubmitEvent) => {
           event.preventDefault();
-          const text = input.get();
+          const text = input.value;
           if (!text.trim()) return;
           if (text.startsWith("/"))
             executeCommand(text.slice(1), {
@@ -140,10 +139,10 @@ export function Chat(opts: {
               text,
               facets: [],
             });
-          input.set("");
+          input.value = "";
         }}
       >
-        <input value={input} type="text" placeholder="message (or /help)" />
+        {input}
       </form>
     </div>
   ) as HTMLElement;
