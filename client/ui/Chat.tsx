@@ -30,6 +30,7 @@ export function Chat(opts: {
     no: new Audio("/assets/readycheck-no.flac"),
   };
   readyCheckAudio.started.load();
+  const messageAudio = new Audio("/assets/message.flac");
 
   const entries = () =>
     [...opts.session.room.timeline, ...localMessages].sort(
@@ -90,7 +91,13 @@ export function Chat(opts: {
   });
 
   opts.session.onEvent(event => {
-    if (event.type === "chat/message-added") appendEntry(event.message);
+    if (event.type === "chat/message-added") {
+      appendEntry(event.message);
+      if (event.message.type === "chat" && opts.session.room.playback.paused) {
+        messageAudio.currentTime = 0;
+        messageAudio.play().catch(() => {});
+      }
+    }
     if (event.type === "ready-check/started") {
       appendEntry(event.entry);
       playReadyCheckAudio(readyCheckAudio.started);
