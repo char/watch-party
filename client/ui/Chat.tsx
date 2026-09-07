@@ -31,6 +31,15 @@ export function Chat(opts: {
   };
   readyCheckAudio.started.load();
   const messageAudio = new Audio("/assets/message.flac");
+  const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')!;
+  const focusListeners = new AbortController();
+  const clearUnread = () => {
+    if (!document.hidden && document.hasFocus()) favicon.href = "/assets/favicon.svg";
+  };
+  window.addEventListener("focus", clearUnread, { signal: focusListeners.signal });
+  document.addEventListener("visibilitychange", clearUnread, {
+    signal: focusListeners.signal,
+  });
 
   const entries = () =>
     [...opts.session.room.timeline, ...localMessages].sort(
@@ -87,12 +96,22 @@ export function Chat(opts: {
       addLocalMessage("Reconnected after losing connection.");
       wasDisconnected = false;
     }
-    if (status === "closed") activeReadyCheck?.dispose();
+    if (status === "closed") {
+      activeReadyCheck?.dispose();
+      focusListeners.abort();
+      favicon.href = "/assets/favicon.svg";
+    }
   });
 
   opts.session.onEvent(event => {
     if (event.type === "chat/message-added") {
       appendEntry(event.message);
+      if (
+        event.message.type === "chat" &&
+        event.message.from !== opts.session.self.id &&
+        (document.hidden || !document.hasFocus())
+      )
+        favicon.href = "/assets/favicon-unread.svg";
       if (event.message.type === "chat" && opts.session.room.playback.paused) {
         messageAudio.currentTime = 0;
         messageAudio.play().catch(() => {});
