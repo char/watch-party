@@ -31,6 +31,7 @@ export function Chat(opts: {
   };
   readyCheckAudio.started.load();
   const messageAudio = new Audio("/assets/message.flac");
+  messageAudio.volume = 10 ** (-12 / 20);
   const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')!;
   const focusListeners = new AbortController();
   const clearUnread = () => {
