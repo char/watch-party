@@ -67,7 +67,10 @@ export function renderReadyCheck(
     </article>
   ) as HTMLElement;
 
-  if (entry.completed) return { elem: article, dispose: () => undefined };
+  if (entry.completed) {
+    article.classList.add(entry.votes.every(record => record.vote === "yes") ? "yes" : "no");
+    return { elem: article, dispose: () => undefined };
+  }
 
   const countdown = article.querySelector(".countdown") as HTMLElement;
   const timer = setInterval(() => {
@@ -104,7 +107,10 @@ export function renderReadyCheck(
     }
 
     if (event.type === "ready-check/completed" && event.checkId === entry.id) {
-      article.classList.add("complete");
+      article.classList.add(
+        "complete",
+        entry.votes.every(record => record.vote === "yes") ? "yes" : "no",
+      );
       countdown.textContent = "(complete)";
       article.querySelector(".buttons")?.remove();
       dispose();

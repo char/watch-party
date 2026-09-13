@@ -129,4 +129,11 @@
   &.complete .buttons {
     display: none;
   }
+
+  &.complete.yes {
+    border-color: rgb(var(--color-success) / 1);
+  }
+  &.complete.no {
+    border-color: rgb(var(--color-fail) / 1);
+  }
 }
