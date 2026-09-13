@@ -112,7 +112,11 @@ export function Chat(opts: {
         (document.hidden || !document.hasFocus())
       )
         favicon.href = "/assets/favicon-unread.svg";
-      if (event.message.type === "chat" && opts.session.room.playback.paused) {
+      if (
+        event.message.type === "chat" &&
+        event.message.from !== opts.session.self.id &&
+        opts.session.room.playback.paused
+      ) {
         messageAudio.currentTime = 0;
         messageAudio.play().catch(() => {});
       }
@@ -159,12 +163,20 @@ export function Chat(opts: {
               ...opts,
               localMessage: addLocalMessage,
             });
-          else
+          else {
             opts.session.send({
               type: "chat/send",
               text,
               facets: [],
             });
+            if (
+              opts.session.status.get() === "connected" &&
+              opts.session.room.playback.paused
+            ) {
+              messageAudio.currentTime = 0;
+              messageAudio.play().catch(() => {});
+            }
+          }
           input.value = "";
         }}
       >
