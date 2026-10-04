@@ -1,4 +1,5 @@
-import { Application, HttpError, Router, Status } from "@oak/oak";
+import type {} from "vite/client";
+import { Application, Router, Status } from "@oak/oak";
 import { randomId } from "../common/id.ts";
 import { validateCreateRoomRequest } from "../common/protocol.ts";
 import { Room } from "./room.ts";
@@ -31,7 +32,8 @@ router.get("/api/room/:room/connect", ctx => {
   if (!room) throw new ApiError(Status.NotFound, "room not found");
 
   const resumeToken = ctx.request.url.searchParams.get("resume") ?? undefined;
-  const socket = ctx.upgrade();
+  const { socket, response } = Deno.upgradeWebSocket(ctx.request.source!);
+  ctx.response.with(response);
 
   if (resumeToken) {
     room.connect(socket, { resumeToken });
@@ -46,17 +48,6 @@ router.get("/api/room/:room/connect", ctx => {
   }
 
   room.connect(socket, { nickname, displayColor });
-});
-
-router.get("/:path*", async ctx => {
-  try {
-    await ctx.send({ root: "./web", index: "index.html" });
-  } catch (err) {
-    if (err instanceof HttpError) {
-      ctx.response.status = err.status;
-      ctx.response.body = err.stack ?? err.message;
-    } else throw err;
-  }
 });
 
 export const app = new Application();
@@ -78,11 +69,11 @@ app.use(async (ctx, next) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-if (import.meta.main) {
-  const hostname = Deno.env.get("BIND_HOST") ?? "0.0.0.0";
-  const port = Number(Deno.env.get("PORT") ?? 8524);
-  console.log(
-    `Listening on http://${hostname === "0.0.0.0" ? "127.0.0.1" : hostname}:${port}/ ...`,
-  );
-  await app.listen({ hostname, port });
-}
+// Rooms, timers and sockets need a process restart rather than module replacement.
+import.meta.hot?.on("vite:beforeFullReload", () => Deno.exit());
+
+export default {
+  async fetch(request: Request) {
+    return (await app.handle(request)) ?? new Response("not found", { status: 404 });
+  },
+} satisfies Deno.ServeDefaultExport;

@@ -7,16 +7,8 @@ powered by [aftercare](https://github.com/char/aftercare) and [oak](https://jsr.
 ## setup
 
 ```shell
-$ deno task start # builds the client and runs the server
+$ deno task start # builds the client and server, then runs the server
 Listening on: http://…
-$ deno task dev # watches the client and runs the server in watch mode
+$ deno task dev # runs the Vite development server and Deno backend
 Listening on: http://…
 ```
-
-## todo
-
-- peer list above chat
-- periodic playhead reporting, debug overview where you can view everyone's timestamp
-- chat formatting
-- playlist manipulation
-- seamless reconnection when websocket drops
